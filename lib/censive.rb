@@ -77,7 +77,7 @@ class Censive < StringScanner
           getch # consume the quote (optimized by not calling next_char)
           match << (scan_until(/(?=#{@quote})/o) or bomb "unclosed quote")
           case next_char
-          when @sep        then next_char; break
+          when @sep        then @flag = @es; next_char; break
           when @quote      then match << @quote
           when @cr,@lf,nil then break
           else bomb "unexpected character after quote"
@@ -92,7 +92,7 @@ class Censive < StringScanner
     else # consume_unquoted_cell
       match = scan_until(/(?=#{@sep}|#{@cr}|#{@lf}|\z)/o) or bomb "unexpected character"
       @char = string[pos]
-      @char == @sep and next_char
+      @char == @sep and @flag = @es and next_char
       match
     end
   end
