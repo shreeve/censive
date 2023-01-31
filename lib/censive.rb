@@ -41,6 +41,7 @@ class Censive < StringScanner
     eol:   "\n"    , # desired line endings for exports
     mode:  :compact, # export mode: compact or full
     out:   nil     , # output IO/file
+    relax: false   , # relax parsing of quotes
 
     **opts           # grab bag
   )
@@ -54,6 +55,7 @@ class Censive < StringScanner
     @eol   = eol.freeze
     @mode  = mode
     @out   = out
+    @relax = relax
 
     @es    = ""   .freeze
     @cr    = "\r" .freeze
@@ -96,7 +98,12 @@ class Censive < StringScanner
           when @sep        then @flag = @es; next_char; break
           when @quote      then match << @quote
           when @cr,@lf,nil then break
-          else bomb "unexpected character after quote"
+          else
+            if @relax
+              match << @quote + @char
+            else
+              bomb "invalid character after quote"
+            end
           end
         end
         match
