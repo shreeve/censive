@@ -18,7 +18,8 @@
 #
 # 1. Option to support IO streaming
 # 2. Option to strip whitespace
-# 3. Confirm file encodings such as UTF-8, UTF-16, etc.
+# 3. Option to support headers in readers and writers
+# 4. Confirm file encodings such as UTF-8, UTF-16, etc.
 #
 # NOTE: Only getch and scan_until advance strscan's position
 # ==============================================================================
