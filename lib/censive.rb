@@ -40,7 +40,7 @@ class Censive < StringScanner
 
     drop:  false   , # enable to drop trailing separators
     eol:   "\n"    , # desired line endings for exports
-    excel: false   , # allow ,="0123" style columns
+    excel: false   , # literals (="01"), formulas (=A1 + B2), see http://bit.ly/3Y7jIvc
     mode:  :compact, # export mode: compact or full
     out:   nil     , # output IO/file
     relax: false   , # relax parsing of quotes
@@ -55,6 +55,7 @@ class Censive < StringScanner
 
     @drop   = drop
     @eol    = eol.freeze
+    @excel  = excel
     @mode   = mode
     @out    = out
     @relax  = relax
@@ -66,7 +67,6 @@ class Censive < StringScanner
     @esc    = (@quote * 2).freeze
 
     @tokens = [@sep,@quote,@cr,@lf,@es,nil]
-    @tokens << @eq if excel # See http://bit.ly/3Y7jIvc
   end
 
   def reset(str=nil)
@@ -87,19 +87,27 @@ class Censive < StringScanner
   end
 
   def next_token
+
+    # process and clear @flag
     case @flag
     when @es then @flag = nil; [@cr,@lf,@es,nil].include?(@char) and return @es
     when @cr then @flag = nil; next_char == @lf and next_char
     when @lf then @flag = nil; next_char
+    else          @flag = nil
     end if @flag
+
+    # See http://bit.ly/3Y7jIvc
+    if @excel && @char == @eq
+      @flag = @eq
+      next_char
+    end
 
     if @tokens.include?(@char)
       case @char
-      when @quote, @eq # consume quoted cell
-        @char == @eq and next_char # excel mode: allows ,="012",
+      when @quote # consume quoted cell
         match = ""
         while true
-          getch # consume the quote (optimized by not calling next_char)
+          getch # consume the quote that got us here
           match << (scan_until(/(?=#{@quote})/o) or bomb "unclosed quote")
           case next_char
           when @sep            then @flag = @es; next_char; break
@@ -121,6 +129,7 @@ class Censive < StringScanner
       end
     else # consume unquoted cell
       match = scan_until(/(?=#{@sep}|#{@cr}|#{@lf}|\z)/o) or bomb "unexpected character"
+      match = @eq + match if @flag == @eq # preserve @eq for excel formulas
       @char = peek(1)
       @char == @sep and @flag = @es and next_char
       match
