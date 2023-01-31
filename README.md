@@ -1,6 +1,6 @@
 # censive
 
-A quick and lightweight CVS handling library for Ruby
+A quick and lightweight CSV handling library for Ruby
 
 ## Writing CSV
 
