@@ -5,6 +5,8 @@
 #
 # Author: Steve Shreeve (steve.shreeve@gmail.com)
 #   Date: Jan 30, 2023
+#
+# Thanks: Crystal's CSV library, see https://crystal-lang.org/api/1.7.2/CSV.html
 # ==============================================================================
 # The goals are:
 #
@@ -91,7 +93,7 @@ class Censive < StringScanner
 
     if @tokens.include?(@char)
       case @char
-      when @quote, @eq # consume_quoted_cell
+      when @quote, @eq # consume quoted cell
         @char == @eq and next_char # excel mode: allows ,="012",
         match = ""
         while true
@@ -115,7 +117,7 @@ class Censive < StringScanner
       when @lf  then @flag = @lf; nil
       when nil  then nil
       end
-    else # consume_unquoted_cell
+    else # consume unquoted cell
       match = scan_until(/(?=#{@sep}|#{@cr}|#{@lf}|\z)/o) or bomb "unexpected character"
       @char = string[pos]
       @char == @sep and @flag = @es and next_char
