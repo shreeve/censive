@@ -26,22 +26,33 @@
 require 'strscan'
 
 class Censive < StringScanner
-  def initialize(string, sep: ',', quote: '"')
-    super(string)
-    reset
 
+  def self.writer(path, **opts)
+    File.open(path, 'w') do |file|
+      yield new(out: file, **opts)
+    end
+  end
+
+  def initialize(str=nil, sep: ',', quote: '"', out: nil)
+    super(str || '')
+    reset
     @sep   = sep  .freeze
     @quote = quote.freeze
-
     @es    = ""   .freeze
     @cr    = "\r" .freeze
     @lf    = "\n" .freeze
+    @out   = out
+    @esc   = (@quote * 2).freeze
   end
 
-  def reset
-    super
+  def reset(str=nil)
+    self.string = str if str
+    super()
     @char  = string[pos]
     @flag  = nil
+
+    @rows  = nil
+    @cols  = @cells = 0
   end
 
   # ==[ Lexer ]==
@@ -87,14 +98,13 @@ class Censive < StringScanner
   end
 
   def bomb(msg)
-    abort "censive: #{msg} at character #{pos} near '#{string[pos-4,7]}'"
+    abort "#{File.basename($0)}: #{msg} at character #{pos} near '#{string[pos-4,7]}'"
   end
 
   # ==[ Parser ]==
 
   def parse
-    @rows = []
-    @cols = @cells = 0
+    @rows ||= []
     while row = next_row
       @rows << row
       size = row.size
@@ -112,6 +122,20 @@ class Censive < StringScanner
   end
 
   # ==[ Helpers ]==
+
+  def <<(row)
+    @out or return super
+    str = row.join(@sep)
+    str = row.map do |col| # escape quotes if needed
+      col.include?(@quote) ? "#{@quote}#{col.gsub(@quote,@esc)}#{@quote}" : col
+    end.join(@sep) if str.include?(@quote)
+    @out << str + @lf #!# TODO: allow custom line endings
+  end
+
+  def each
+    @rows ||= parse
+    @rows.each {|row| yield row }
+  end
 
   def stats
     wide = string.size.to_s.size
