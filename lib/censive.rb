@@ -33,7 +33,7 @@ class Censive < StringScanner
     end
   end
 
-  def initialize(str=nil, sep: ',', quote: '"', out: nil)
+  def initialize(str=nil, sep: ',', quote: '"', out: nil, mode: :compact)
     super(str || '')
     reset
     @sep   = sep  .freeze
@@ -43,6 +43,7 @@ class Censive < StringScanner
     @lf    = "\n" .freeze
     @out   = out
     @esc   = (@quote * 2).freeze
+    @mode  = mode
   end
 
   def reset(str=nil)
@@ -137,18 +138,22 @@ class Censive < StringScanner
 
     # most compact export format
     s,q = @sep, @quote
-    out =
-    case grok(row.join)
-    when 0 then row
-    when 1 then row.map {|col| col.include?(s) ? "#{q}#{col}#{q}" : col }
-    else
-      row.map do |col|
-        case grok(col)
-        when 0 then col
-        when 1 then "#{q}#{col}#{q}"
-        else        "#{q}#{col.gsub(q, @esc)}#{q}"
+    out = case @mode
+    when :compact
+      case grok(row.join)
+      when 0 then row
+      when 1 then row.map {|col| col.include?(s) ? "#{q}#{col}#{q}" : col }
+      else
+        row.map do |col|
+          case grok(col)
+          when 0 then col
+          when 1 then "#{q}#{col}#{q}"
+          else        "#{q}#{col.gsub(q, @esc)}#{q}"
+          end
         end
       end
+    when :full
+      row.map {|col| "#{q}#{col.gsub(q, @esc)}#{q}" }
     end.join(s)
 
     #!# TODO: allow an option to remove trailing seps in the output
