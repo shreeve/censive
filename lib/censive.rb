@@ -114,7 +114,7 @@ class Censive < StringScanner
   end
 
   def bomb(msg)
-    abort "#{File.basename($0)}: #{msg} at character #{pos} near '#{string[pos-4,7]}'"
+    abort "\n#{File.basename($0)}: #{msg} at character #{pos} near '#{string[pos-4,7]}'"
   end
 
   # ==[ Parser ]==
