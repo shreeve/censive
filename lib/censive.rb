@@ -153,9 +153,9 @@ class Censive < StringScanner
 
   # ==[ Helpers ]==
 
-  # grok returns: 2 for seps and quotes, 1 for seps only, and 0 for neither
+  # grok returns: 2 (must be quoted and escaped), 1 (must be quoted), 0 (neither)
   def grok(str)
-    if pos = str.index(/(#{@quote})|#{@sep}/o)
+    if pos = str.index(/(#{@quote})|#{@sep}|#{@cr}|#{@lf}/o)
       $1 ? 2 : str.index(/#{@quote}/o, pos) ? 2 : 1
     else
       0
@@ -173,8 +173,12 @@ class Censive < StringScanner
     out = case @mode
     when :compact
       case grok(row.join)
-      when 0 then row
-      when 1 then row.map {|col| col.include?(s) ? "#{q}#{col}#{q}" : col }
+      when 0
+        row
+      when 1
+        row.map do |col|
+          col.match?(/#{@sep}|#{@cr}|#{@lf}/o) ? "#{q}#{col}#{q}" : col
+        end
       else
         row.map do |col|
           case grok(col)
