@@ -15,8 +15,7 @@
 #
 # 1. Option to support IO streaming
 # 2. Option to strip whitespace
-# 3. Option to allow reading excel CSV (="Text" for cells)
-# 4. Confirm file encodings such as UTF-8, UTF-16, etc.
+# 3. Confirm file encodings such as UTF-8, UTF-16, etc.
 #
 # NOTE: Only getch and scan_until advance strscan's position
 # ==============================================================================
@@ -37,6 +36,7 @@ class Censive < StringScanner
 
     drop:  false   , # enable to drop trailing separators
     eol:   "\n"    , # desired line endings for exports
+    excel: false   , # allow ,="0123" style columns
     mode:  :compact, # export mode: compact or full
     out:   nil     , # output IO/file
     relax: false   , # relax parsing of quotes
@@ -46,19 +46,23 @@ class Censive < StringScanner
     super(str || '')
     reset
 
-    @sep   = sep  .freeze
-    @quote = quote.freeze
+    @sep    = sep  .freeze
+    @quote  = quote.freeze
 
-    @drop  = drop
-    @eol   = eol.freeze
-    @mode  = mode
-    @out   = out
-    @relax = relax
+    @drop   = drop
+    @eol    = eol.freeze
+    @mode   = mode
+    @out    = out
+    @relax  = relax
 
-    @es    = ""   .freeze
-    @cr    = "\r" .freeze
-    @lf    = "\n" .freeze
-    @esc   = (@quote * 2).freeze
+    @es     = ""   .freeze
+    @cr     = "\r" .freeze
+    @lf     = "\n" .freeze
+    @eq     = "="  .freeze
+    @esc    = (@quote * 2).freeze
+
+    @tokens = [@sep,@quote,@cr,@lf,nil]
+    @tokens << @eq if excel # See http://bit.ly/3Y7jIvc
   end
 
   def reset(str=nil)
@@ -85,9 +89,10 @@ class Censive < StringScanner
     when @lf then @flag = nil; next_char
     end if @flag
 
-    if [@sep,@quote,@cr,@lf,nil].include?(@char)
+    if @tokens.include?(@char)
       case @char
-      when @quote # consume_quoted_cell
+      when @quote, @eq # consume_quoted_cell
+        @char == @eq and next_char # excel mode: allows ,="012",
         match = ""
         while true
           getch # consume the quote (optimized by not calling next_char)
