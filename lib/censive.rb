@@ -6,7 +6,8 @@
 # Author: Steve Shreeve (steve.shreeve@gmail.com)
 #   Date: Jan 30, 2023
 #
-# Thanks: Crystal's CSV library, see https://crystal-lang.org/api/1.7.2/CSV.html
+# Thanks to https://crystal-lang.org/api/1.7.2/CSV.html (Crystal's CSV library)
+# and, also https://github.com/ruby/strscan/blob/master/ext/strscan/strscan.c
 # ==============================================================================
 # The goals are:
 #
