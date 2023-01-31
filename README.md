@@ -12,7 +12,7 @@ data = File.read('data.csv')
 
 # write out a tab-separated tsv file
 Censive.writer('out.tsv', sep: "\t", mode: :full) do |out|
-  Censive.new(data).each do |row|
+  Censive.new(data, excel: true, relax: true).each do |row|
     out << row
   end
 end
