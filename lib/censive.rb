@@ -123,13 +123,39 @@ class Censive < StringScanner
 
   # ==[ Helpers ]==
 
+  # grok returns 2 (seps and quotes), 1 (seps only), 0 (neither)
+  def grok(str)
+    if pos = str.index(/(#{@quote})|#{@sep}/o)
+      $1 ? 2 : str.index(/#{@quote}/o, pos) ? 2 : 1
+    else
+      0
+    end
+  end
+
   def <<(row)
     @out or return super
-    str = row.join(@sep)
-    str = row.map do |col| # escape quotes if needed
-      col.include?(@quote) ? "#{@quote}#{col.gsub(@quote,@esc)}#{@quote}" : col
-    end.join(@sep) if str.include?(@quote)
-    @out << str + @lf #!# TODO: allow custom line endings
+
+    # most compact export format
+    s,q = @sep, @quote
+    out =
+    case grok(row.join)
+    when 0 then row
+    when 1 then row.map {|col| col.include?(s) ? "#{q}#{col}#{q}" : col }
+    else
+      row.map do |col|
+        case grok(col)
+        when 0 then col
+        when 1 then "#{q}#{col}#{q}"
+        else        "#{q}#{col.gsub(q, @esc)}#{q}"
+        end
+      end
+    end.join(s)
+
+    #!# TODO: allow an option to remove trailing seps in the output
+    # out.gsub!(/#{s}+\z/,'')
+
+    #!# TODO: allow these line endings to be configurable
+    @out << out + @lf
   end
 
   def each
