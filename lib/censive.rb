@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 # ==============================================================================
-# censive - A quick and lightweight CVS handling library for Ruby
+# censive - A quick and lightweight CSV handling library for Ruby
 #
 # Author: Steve Shreeve (steve.shreeve@gmail.com)
 #   Date: Jan 30, 2023
