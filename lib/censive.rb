@@ -45,12 +45,12 @@ class Censive < StringScanner
     sep:   ','     , # column separator character
     quote: '"'     , # quote character
 
-    drop:  false   , # enable to drop trailing separators
-    eol:   "\n"    , # desired line endings for exports
-    excel: false   , # literals (="01"), formulas (=A1 + B2), see http://bit.ly/3Y7jIvc
+    drop:  false   , # drop trailing empty fields?
+    eol:   "\n"    , # line endings for exports
+    excel: false   , # literals(="01") formulas(=A1 + B2); http://bit.ly/3Y7jIvc
     mode:  :compact, # export mode: compact or full
-    out:   nil     , # output IO/file
-    relax: false   , # relax parsing of quotes
+    out:   nil     , # output IO file
+    relax: false   , # relax quote parsing so ,"Fo"o, => ,"Fo""o",
 
     **opts           # grab bag
   )
@@ -61,7 +61,7 @@ class Censive < StringScanner
     @quote  = quote.freeze
 
     @drop   = drop
-    @eol    = eol.freeze
+    @eol    = eol  .freeze
     @excel  = excel
     @mode   = mode
     @out    = out
@@ -136,7 +136,7 @@ class Censive < StringScanner
       end
     else # consume unquoted cell
       match = scan_until(/(?=#{@sep}|#{@cr}|#{@lf}|\z)/o) or bomb "unexpected character"
-      match = @eq + match if @flag == @eq # preserve @eq for excel formulas
+      match = @eq + match and @flag = nil if @flag == @eq # preserve @eq for excel formulas
       @char = peek(1)
       @char == @sep and @flag = @es and next_char
       match
