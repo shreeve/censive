@@ -38,6 +38,7 @@ class Censive < StringScanner
     quote: '"'     , # quote character
     out:   nil     , # output IO/file
     mode:  :compact, # export mode: compact or full
+    drop:  false   , # enable to drop trailing separators
     eol:   "\n"      # desired line endings for exports
   )
     super(str || '')
@@ -47,6 +48,7 @@ class Censive < StringScanner
     @quote = quote.freeze
     @out   = out
     @mode  = mode
+    @drop  = drop
     @eol   = eol.freeze
 
     @es    = ""   .freeze
@@ -165,8 +167,8 @@ class Censive < StringScanner
       row.map {|col| "#{q}#{col.gsub(q, @esc)}#{q}" }
     end.join(s)
 
-    #!# TODO: allow an option to remove trailing seps in the output
-    # out.gsub!(/#{s}+\z/,'')
+    # drop trailing seps, if specified
+    out.gsub!(/#{s}+\z/,'') if @drop
 
     # write output, using desired line endings
     @out << out + @eol
