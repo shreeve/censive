@@ -10,7 +10,15 @@
 #
 # 1. Faster than Ruby's default CSV library
 # 2. Lightweight code base with streamlined method calls
-# 3. Eventually support IO streaming
+#
+# To consider:
+#
+# 1. Option to support IO streaming
+# 2. Option to strip whitespace
+# 3. Option to change output line endings
+# 4. Option to force quotes in output
+# 5. Option to allow reading excel CSV (="Text" for cells)
+# 6. Confirm file encodings such as UTF-8, UTF-16, etc.
 #
 # NOTE: Only getch and scan_until advance strscan's position
 # ==============================================================================
