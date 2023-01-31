@@ -15,10 +15,8 @@
 #
 # 1. Option to support IO streaming
 # 2. Option to strip whitespace
-# 3. Option to change output line endings
-# 4. Option to force quotes in output
-# 5. Option to allow reading excel CSV (="Text" for cells)
-# 6. Confirm file encodings such as UTF-8, UTF-16, etc.
+# 3. Option to allow reading excel CSV (="Text" for cells)
+# 4. Confirm file encodings such as UTF-8, UTF-16, etc.
 #
 # NOTE: Only getch and scan_until advance strscan's position
 # ==============================================================================
@@ -158,6 +156,9 @@ class Censive < StringScanner
   def <<(row)
     @out or return super
 
+    # drop trailing seps, if specified
+    row.pop while row.last.empty? if @drop
+
     # most compact export format
     s,q = @sep, @quote
     out = case @mode
@@ -177,9 +178,6 @@ class Censive < StringScanner
     when :full
       row.map {|col| "#{q}#{col.gsub(q, @esc)}#{q}" }
     end.join(s)
-
-    # drop trailing seps, if specified
-    out.gsub!(/#{s}+\z/,'') if @drop
 
     # write output, using desired line endings
     @out << out + @eol
