@@ -36,20 +36,24 @@ class Censive < StringScanner
   def initialize(str=nil,
     sep:   ','     , # column separator character
     quote: '"'     , # quote character
-    out:   nil     , # output IO/file
-    mode:  :compact, # export mode: compact or full
+
     drop:  false   , # enable to drop trailing separators
-    eol:   "\n"      # desired line endings for exports
+    eol:   "\n"    , # desired line endings for exports
+    mode:  :compact, # export mode: compact or full
+    out:   nil     , # output IO/file
+
+    **opts           # grab bag
   )
     super(str || '')
     reset
 
     @sep   = sep  .freeze
     @quote = quote.freeze
-    @out   = out
-    @mode  = mode
+
     @drop  = drop
     @eol   = eol.freeze
+    @mode  = mode
+    @out   = out
 
     @es    = ""   .freeze
     @cr    = "\r" .freeze
