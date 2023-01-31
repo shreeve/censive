@@ -79,7 +79,7 @@ class Censive < StringScanner
 
   def next_char
     getch
-    @char = string[pos]
+    @char = peek(1)
   end
 
   def next_token
