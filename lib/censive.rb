@@ -63,18 +63,18 @@ class Censive < StringScanner
     @eq     = "="  .freeze
     @esc    = (@quote * 2).freeze
 
-    @tokens = [@sep,@quote,@cr,@lf,nil]
+    @tokens = [@sep,@quote,@cr,@lf,@es,nil]
     @tokens << @eq if excel # See http://bit.ly/3Y7jIvc
   end
 
   def reset(str=nil)
     self.string = str if str
     super()
-    @char  = string[pos]
-    @flag  = nil
+    @char = peek(1)
+    @flag = nil
 
-    @rows  = nil
-    @cols  = @cells = 0
+    @rows = nil
+    @cols = @cells = 0
   end
 
   # ==[ Lexer ]==
@@ -86,7 +86,7 @@ class Censive < StringScanner
 
   def next_token
     case @flag
-    when @es then @flag = nil; [@cr,@lf,nil].include?(@char) and return @es
+    when @es then @flag = nil; [@cr,@lf,@es,nil].include?(@char) and return @es
     when @cr then @flag = nil; next_char == @lf and next_char
     when @lf then @flag = nil; next_char
     end if @flag
@@ -100,9 +100,9 @@ class Censive < StringScanner
           getch # consume the quote (optimized by not calling next_char)
           match << (scan_until(/(?=#{@quote})/o) or bomb "unclosed quote")
           case next_char
-          when @sep        then @flag = @es; next_char; break
-          when @quote      then match << @quote
-          when @cr,@lf,nil then break
+          when @sep            then @flag = @es; next_char; break
+          when @quote          then match << @quote
+          when @cr,@lf,@es,nil then break
           else
             if @relax
               match << @quote + @char
@@ -112,14 +112,14 @@ class Censive < StringScanner
           end
         end
         match
-      when @sep then @flag = @es; next_char; @es
-      when @cr  then @flag = @cr; nil
-      when @lf  then @flag = @lf; nil
-      when nil  then nil
+      when @sep    then @flag = @es; next_char; @es
+      when @cr     then @flag = @cr; nil
+      when @lf     then @flag = @lf; nil
+      when @es,nil then              nil
       end
     else # consume unquoted cell
       match = scan_until(/(?=#{@sep}|#{@cr}|#{@lf}|\z)/o) or bomb "unexpected character"
-      @char = string[pos]
+      @char = peek(1)
       @char == @sep and @flag = @es and next_char
       match
     end
