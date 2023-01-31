@@ -53,7 +53,7 @@ end
 puts "Processed #{coun} files with a total of #{full} rows of data" if coun > 1
 ```
 
-## Writing CSV
+## Convert a CSV file to a TSV file
 
 ```ruby
 require 'censive'
