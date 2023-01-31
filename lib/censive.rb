@@ -135,7 +135,7 @@ class Censive < StringScanner
 
   # ==[ Helpers ]==
 
-  # grok returns 2 (seps and quotes), 1 (seps only), 0 (neither)
+  # grok returns: 2 for seps and quotes, 1 for seps only, and 0 for neither
   def grok(str)
     if pos = str.index(/(#{@quote})|#{@sep}/o)
       $1 ? 2 : str.index(/#{@quote}/o, pos) ? 2 : 1
