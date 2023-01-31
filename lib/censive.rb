@@ -18,14 +18,16 @@
 require 'strscan'
 
 class Censive < StringScanner
-  def initialize(...)
-    super
+  def initialize(string, sep: ',', quote: '"')
+    super(string)
     reset
-    @sep   = ',' .freeze # make this a param
-    @quote = '"' .freeze # make this a param
-    @es    = ""  .freeze
-    @cr    = "\r".freeze
-    @lf    = "\n".freeze
+
+    @sep   = sep  .freeze
+    @quote = quote.freeze
+
+    @es    = ""   .freeze
+    @cr    = "\r" .freeze
+    @lf    = "\n" .freeze
   end
 
   def reset
