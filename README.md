@@ -35,7 +35,7 @@ ARGV.each do |path|
 
   begin
     Censive.writer(dest) do |file|
-      Censive.new(File.read(path), excel: true, relax: true).each do |cols|
+      Censive.reader(path, excel: true, relax: true).each do |cols|
         file << cols
         seen += 1
         print "." if (seen % 1e5) == 0 # give a status update every so often
