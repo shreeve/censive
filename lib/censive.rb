@@ -177,13 +177,13 @@ class Censive < StringScanner
     end
   end
 
+  # output a row
   def <<(row)
     @out or return super
 
-    # drop trailing seps, if specified
+    # drop trailing empty columns
     row.pop while row.last.empty? if @drop
 
-    # most compact export format
     s,q = @sep, @quote
     out = case @mode
     when :compact
@@ -207,7 +207,7 @@ class Censive < StringScanner
       row.map {|col| "#{q}#{col.gsub(q, @esc)}#{q}" }
     end.join(s)
 
-    # write output, using desired line endings
+    # add line ending
     @out << out + @eol
   end
 
