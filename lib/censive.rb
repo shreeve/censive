@@ -179,7 +179,7 @@ class Censive < StringScanner
     # drop trailing empty columns
     row.pop while row.last.empty? if @drop
 
-    #!# FIXME: allow @excel to protect leading zeroes on output
+    #!# FIXME: Excel output needs to protect 0-leading numbers
 
     s,q = @sep, @quote
     out = case @mode
