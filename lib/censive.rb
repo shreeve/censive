@@ -57,15 +57,14 @@ class Censive < StringScanner
     super(str || '')
     reset
 
-    @sep    = sep  .freeze
-    @quote  = quote.freeze
-
     @drop   = drop
-    @eol    = eol  .freeze
+    @eol    = eol  .freeze #!# TODO: are the '.freeze' statements helpful?
     @excel  = excel
     @mode   = mode
     @out    = out
+    @quote  = quote.freeze
     @relax  = relax
+    @sep    = sep  .freeze
 
     @es     = ""   .freeze
     @cr     = "\r" .freeze
