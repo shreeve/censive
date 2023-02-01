@@ -102,7 +102,7 @@ class Censive < StringScanner
     else          @flag = nil
     end if @flag
 
-    # See http://bit.ly/3Y7jIvc
+    # Excel literals ="0123" and formulas =A1 + B2 (see http://bit.ly/3Y7jIvc)
     if @excel && @char == @eq
       @flag = @eq
       next_char
@@ -130,7 +130,7 @@ class Censive < StringScanner
       end
     else # consume unquoted cell
       match = scan_until(/(?=#{@sep}|#{@cr}|#{@lf}|\z)/o) or bomb "unexpected character"
-      match = @eq + match and @flag = nil if @flag == @eq # preserve @eq for excel formulas
+      match = @eq + match and @flag = nil if @flag == @eq
       @char = peek(1)
       @char == @sep and @flag = @es and next_char
       match
@@ -178,6 +178,8 @@ class Censive < StringScanner
 
     # drop trailing empty columns
     row.pop while row.last.empty? if @drop
+
+    #!# FIXME: allow @excel to protect leading zeroes on output
 
     s,q = @sep, @quote
     out = case @mode
