@@ -44,16 +44,14 @@ class Censive < StringScanner
   end
 
   def initialize(str=nil,
-    sep:   ','     , # column separator character
-    quote: '"'     , # quote character
-
     drop:  false   , # drop trailing empty fields?
     eol:   "\n"    , # line endings for exports
     excel: false   , # literals(="01") formulas(=A1 + B2); http://bit.ly/3Y7jIvc
     mode:  :compact, # export mode: compact or full
-    out:   nil     , # output IO file
+    out:   nil     , # output stream, needs to respond to <<
+    quote: '"'     , # quote character
     relax: false   , # relax quote parsing so ,"Fo"o, => ,"Fo""o",
-
+    sep:   ','     , # column separator character
     **opts           # grab bag
   )
     super(str || '')
