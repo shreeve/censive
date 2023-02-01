@@ -149,12 +149,12 @@ class Censive < StringScanner
   # ==[ Parser ]==
 
   def parse
-    @rows ||= []
+    @rows = []
     while row = next_row
       @rows << row
-      size = row.size
-      @cols = size if size > @cols
-      @cells += size
+      count = row.size
+      @cols = count if count > @cols
+      @cells += count
     end
     @rows
   end
