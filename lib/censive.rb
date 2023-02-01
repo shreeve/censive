@@ -119,12 +119,7 @@ class Censive < StringScanner
           when @sep            then @flag = @es; next_char; break
           when @quote          then match << @quote
           when @cr,@lf,@es,nil then break
-          else
-            if @relax
-              match << @quote + @char
-            else
-              bomb "invalid character after quote"
-            end
+          else @relax ? match << (@quote + @char) : bomb("invalid character after quote")
           end
         end
         match
