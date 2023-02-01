@@ -35,9 +35,11 @@ class Censive < StringScanner
     end
   end
 
-  def self.writer(path, **opts)
-    File.open(path, 'w') do |file|
-      yield new(out: file, **opts)
+  def self.writer(obj=$stdout, **opts)
+    case obj
+    when String then File.open(path, 'w') {|file| yield new(out: obj, **opts) }
+    when IO     then new(out: obj, **opts)
+    else abort "#{File.basename($0)}: invalid #{obj.class} object in writer"
     end
   end
 
