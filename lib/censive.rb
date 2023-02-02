@@ -219,3 +219,19 @@ class Censive < StringScanner
     puts "%#{wide}d bytes"   % string.size
   end
 end
+
+# ==[ Command line ]==
+
+if __FILE__ == $0
+  raw = DATA.gets("\n\n").chomp
+  csv = Censive.new(raw, excel: true)
+  csv.export # (sep: "\t", excel: true)
+end
+
+__END__
+Name,Age,Shoe
+Alice,27,5
+Bob,33,10 1/2
+Charlie or "Chuck",=B2 + B3,9
+"Doug E Fresh",="007",10
+Subtotal,=sum(B2:B5),="01234"
