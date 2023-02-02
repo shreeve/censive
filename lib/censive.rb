@@ -24,8 +24,10 @@
 #
 # NOTE: Only getch and scan_until advance strscan's position
 # NOTE: getch returns peek(1) but *then* advances; it's out of sync
-# TODO: add nextch to strscan that advances *then* returns peek(1)
-# TODO: add scan_upto like scan_until but doesn't include the match
+# TODO: add curr_char to strscan that returns the same as peek(1)
+# TODO: add next_char to strscan that advances and *then* returns curr_char
+# TODO: add scan_upto to strscan that is like scan_until but returns pre_match
+# TODO: the scan_upto should leave pos at the first character of what matched
 # ==============================================================================
 
 require 'strscan'
@@ -90,8 +92,6 @@ class Censive < StringScanner
   end
 
   def next_token
-
-    # process and clear @flag
     case @flag
     when @es then @flag = nil; [@cr,@lf,@es,nil].include?(@char) and return @es
     when @cr then @flag = nil; next_char == @lf and next_char
@@ -160,7 +160,7 @@ class Censive < StringScanner
 
   # ==[ Helpers ]==
 
-  # grok returns: 2 (must be quoted and escaped), 1 (must be quoted), 0 (neither)
+  # returns 2 (must be quoted and escaped), 1 (must be quoted), 0 (neither)
   def grok(str)
     if pos = str.index(/(#{@quote})|#{@sep}|#{@cr}|#{@lf}/o)
       $1 ? 2 : str.index(/#{@quote}/o, pos) ? 2 : 1
@@ -201,7 +201,6 @@ class Censive < StringScanner
       row.map {|col| "#{q}#{col.gsub(q, @esc)}#{q}" }
     end.join(s)
 
-    # add line ending
     @out << out + @eol
   end
 
@@ -223,8 +222,6 @@ class Censive < StringScanner
     puts "%#{wide}d bytes"   % string.size
   end
 end
-
-# ==[ Command line ]==
 
 if __FILE__ == $0
   raw = DATA.gets("\n\n").chomp
