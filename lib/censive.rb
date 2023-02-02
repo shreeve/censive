@@ -12,7 +12,7 @@
 # The goals are:
 #
 # 1. Faster than Ruby's default CSV library
-# 2. Lightweight code base with streamlined method calls
+# 2. Lightweight code base with streamlined logic
 #
 # To consider:
 #
