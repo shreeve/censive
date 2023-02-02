@@ -15,19 +15,14 @@
 # 2. Lightweight code base with streamlined logic
 # 3. Support for most non-compliant CSV variations
 #
-# To consider:
+# Todo:
 #
 # 1. Support IO streaming
 # 2. Add option to strip whitespace
 # 3. Support CSV headers in first row
 # 4. Confirm file encodings such as UTF-8, UTF-16, etc.
 #
-# NOTE: Only getch and scan_until advance strscan's position
-# NOTE: getch returns peek(1) but *then* advances; it's out of sync
-# TODO: add curr_char to strscan that is like peek(1), but is multibyte-aware
-# TODO: add next_char to strscan that advances and *then* returns curr_char
-# TODO: add scan_upto to strscan that is like scan_until but returns pre_match
-# TODO: the scan_upto should leave pos at the first character of what matched
+# https://github.com/ruby/strscan/issues/50 for strscan suggested improvements
 # ==============================================================================
 
 require 'strscan'
