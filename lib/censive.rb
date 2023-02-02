@@ -88,7 +88,7 @@ class Censive < StringScanner
 
   def next_char
     getch
-    @char = peek(1)
+    @char = peek(1) #!# FIXME: not multibyte encoding aware
   end
 
   def next_token
@@ -128,7 +128,7 @@ class Censive < StringScanner
     else # consume unquoted cell
       match = scan_until(/(?=#{@sep}|#{@cr}|#{@lf}|\z)/o) or bomb "unexpected character"
       match = @eq + match and @flag = nil if @flag == @eq
-      @char = peek(1)
+      @char = peek(1) #!# FIXME: not multibyte encoding aware
       @char == @sep and @flag = @es and next_char
       match
     end
