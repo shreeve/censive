@@ -28,13 +28,6 @@ require 'strscan'
 
 class Censive < StringScanner
 
-  def self.reader(path, **opts)
-    File.open(path, 'r') do |file|
-      data = file.read #!# TODO: replace with a buffered IO stream
-      new(data, **opts)
-    end
-  end
-
   def self.writer(obj=$stdout, **opts)
     case obj
     when String then File.open(path, 'w') {|file| yield new(out: obj, **opts) }
