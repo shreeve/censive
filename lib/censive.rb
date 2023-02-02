@@ -206,6 +206,11 @@ class Censive < StringScanner
     @rows.each {|row| yield row }
   end
 
+  def export(...)
+    out = self.class.writer(...)
+    each {|row| out << row }
+  end
+
   def stats
     wide = string.size.to_s.size
     puts "%#{wide}d rows"    % @rows.size
