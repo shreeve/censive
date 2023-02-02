@@ -13,16 +13,19 @@
 #
 # 1. Faster than Ruby's default CSV library
 # 2. Lightweight code base with streamlined logic
-# 3. Support most non-compliant CSV variations
+# 3. Support for most non-compliant CSV variations
 #
 # To consider:
 #
-# 1. Option to support IO streaming
-# 2. Option to strip whitespace
+# 1. Support IO streaming
+# 2. Add option to strip whitespace
 # 3. Support CSV headers in first row
 # 4. Confirm file encodings such as UTF-8, UTF-16, etc.
 #
 # NOTE: Only getch and scan_until advance strscan's position
+# NOTE: getch returns peek(1) but *then* advances; it's out of sync
+# TODO: add nextch to strscan that advances *then* returns peek(1)
+# TODO: add scan_upto like scan_until but doesn't include the match
 # ==============================================================================
 
 require 'strscan'
