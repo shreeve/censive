@@ -110,7 +110,7 @@ class Censive < StringScanner
       when @quote # consume quoted cell
         match = ""
         while true
-          getch # move past the quote that got us here
+          next_char # move past the quote that got us here
           match << (scan_until(/(?=#{@quote})/o) or bomb "unclosed quote")
           case next_char
           when @sep            then @flag = @es; next_char; break
