@@ -68,3 +68,12 @@ Censive.writer('out.tsv', sep: "\t", mode: :full) do |out|
   end
 end
 ```
+
+Or, you can be more succinct with:
+
+```ruby
+require 'censive'
+
+csv = Censive.new(File.read('data.csv'))
+csv.export(sep: "\t")
+```
