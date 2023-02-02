@@ -28,10 +28,10 @@ require 'strscan'
 
 class Censive < StringScanner
 
-  def self.writer(obj=$stdout, **opts)
+  def self.writer(obj=$stdout, **opts, &code)
     case obj
-    when String then File.open(path, 'w') {|file| yield new(out: obj, **opts) }
-    when IO     then new(out: obj, **opts)
+    when String then File.open(path, 'w') {|file| yield new(out: obj, **opts, &code) }
+    when IO     then new(out: obj, **opts, &code)
     else abort "#{File.basename($0)}: invalid #{obj.class} object in writer"
     end
   end
