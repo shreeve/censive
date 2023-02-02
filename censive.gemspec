@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name        = "censive"
-  s.version     = "0.9"
+  s.version     = "0.10"
   s.author      = "Steve Shreeve"
   s.email       = "steve.shreeve@gmail.com"
   s.summary     = "A quick and lightweight CSV handling library for Ruby"
