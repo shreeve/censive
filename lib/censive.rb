@@ -41,7 +41,7 @@ class Censive < StringScanner
   def initialize(str=nil,
     drop:  false   , # drop trailing empty fields?
     eol:   "\n"    , # line endings for exports
-    excel: false   , # literals(="01") formulas(=A1 + B2); http://bit.ly/3Y7jIvc
+    excel: false   , # literals ="01" formulas =A1 + B2 http://bit.ly/3Y7jIvc
     mode:  :compact, # export mode: compact or full
     out:   nil     , # output stream, needs to respond to <<
     quote: '"'     , # quote character
@@ -99,8 +99,7 @@ class Censive < StringScanner
     else          @flag = nil
     end if @flag
 
-    # Excel literals ="0123" and formulas =A1 + B2 (see http://bit.ly/3Y7jIvc)
-    if @excel && @char == @eq
+   if @excel && @char == @eq
       @flag = @eq
       next_char
     end
