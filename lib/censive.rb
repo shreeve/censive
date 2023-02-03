@@ -157,8 +157,8 @@ class Censive < StringScanner
 
   # returns 2 (must be quoted and escaped), 1 (must be quoted), 0 (neither)
   def grok(str)
-    if pos = str.index(/(#{@quote})|#{@sep}|#{@cr}|#{@lf}/o)
-      $1 ? 2 : str.index(/#{@quote}/o, pos) ? 2 : 1
+    if idx = str.index(/(#{@quote})|#{@sep}|#{@cr}|#{@lf}/o)
+      $1 ? 2 : str.index(/#{@quote}/o, idx) ? 2 : 1
     else
       0
     end
