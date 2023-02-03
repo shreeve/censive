@@ -25,6 +25,7 @@
 # 4. Confirm file encodings such as UTF-8, UTF-16, etc.
 # ============================================================================
 
+require 'bundler/setup'
 require 'strscan'
 
 class Censive < StringScanner
@@ -77,7 +78,7 @@ class Censive < StringScanner
   def reset(str=nil)
     self.string = str if str
     super()
-    @char = peek(1) #!# FIXME: not multibyte encoding aware
+    @char = peekch
     @flag = nil
 
     @rows = nil
@@ -87,8 +88,7 @@ class Censive < StringScanner
   # ==[ Lexer ]==
 
   def next_char
-    getch
-    @char = peek(1) #!# FIXME: not multibyte encoding aware
+    @char = nextch
   end
 
   def next_token
@@ -128,7 +128,7 @@ class Censive < StringScanner
     else # consume unquoted cell
       match = scan_until(/(?=#{@sep}|#{@cr}|#{@lf}|\z)/o) or bomb "unexpected character"
       match = @eq + match and @flag = nil if @flag == @eq
-      @char = peek(1) #!# FIXME: not multibyte encoding aware
+      @char = peekch
       @char == @sep and @flag = @es and next_char
       match
     end
