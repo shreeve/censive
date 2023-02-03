@@ -72,7 +72,7 @@ class Censive < StringScanner
   def reset(str=nil)
     self.string = str if str
     super()
-    @char = peek(1)
+    @char = peek(1) #!# FIXME: not multibyte encoding aware
     @flag = nil
 
     @rows = nil
