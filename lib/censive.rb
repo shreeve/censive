@@ -78,8 +78,7 @@ class Censive < StringScanner
   def reset(str=nil)
     self.string = str if str
     super()
-    @char = rest&.chr #!# FIXME: change this
-
+    @char = curr_char
     @rows = nil
     @cols = @cells = 0
   end
