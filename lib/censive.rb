@@ -234,3 +234,7 @@ Bob,33,10 1/2
 Charlie or "Chuck",=B2 + B3,9
 "Doug E Fresh",="007",10
 Subtotal,=sum(B2:B5),="01234"
+
+# the first line will work in "relax" mode, the second line is compliant
+123,"CHO, JOELLE "JOJO"",456
+123,"CHO, JOELLE ""JOJO""",456
