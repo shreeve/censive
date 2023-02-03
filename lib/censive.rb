@@ -29,10 +29,10 @@ require 'strscan'
 
 class Censive < StringScanner
 
-  def self.writer(obj=$stdout, **opts, &code)
+  def self.writer(obj=nil, **opts, &code)
     case obj
     when String then File.open(path, 'w') {|file| yield new(out: obj, **opts, &code) }
-    when IO     then new(out: obj, **opts, &code)
+    when IO,nil then new(out: obj, **opts, &code)
     else abort "#{File.basename($0)}: invalid #{obj.class} object in writer"
     end
   end
@@ -55,7 +55,7 @@ class Censive < StringScanner
     @eol    = eol  .freeze #!# TODO: are the '.freeze' statements helpful?
     @excel  = excel
     @mode   = mode
-    @out    = out
+    @out    = out || $stdout
     @quote  = quote.freeze
     @relax  = relax
     @sep    = sep  .freeze
@@ -166,7 +166,6 @@ class Censive < StringScanner
 
   # output a row
   def <<(row)
-    @out or return super
 
     # drop trailing empty columns
     row.pop while row.last.empty? if @drop
