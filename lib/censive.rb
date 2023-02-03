@@ -203,8 +203,8 @@ class Censive < StringScanner
     @rows.each {|row| yield row }
   end
 
-  def export(...)
-    out = self.class.writer(...)
+  def export(**opts)
+    out = opts.empty? ? self : self.class.writer(**opts)
     each {|row| out << row }
   end
 
