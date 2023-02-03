@@ -11,18 +11,23 @@
 # • https://github.com/ruby/strscan/issues/50 for details
 # • https://github.com/ruby/strscan/pull/52 for code
 # ============================================================================
-# The goals are:
+# GOALS:
 #
 # 1. Faster than Ruby's default CSV library
 # 2. Lightweight code base with streamlined logic
 # 3. Support for most non-compliant CSV variations
 #
-# Todo:
+# TODO:
 #
 # 1. Support IO streaming
 # 2. Add option to strip whitespace
 # 3. Support CSV headers in first row
 # 4. Confirm file encodings such as UTF-8, UTF-16, etc.
+#
+# NOTE: we used @tokens = [@sep,@quote,@cr,@lf,@es,nil] and
+#       @tokens.include?(@char) and [@cr,@lf,@es,nil] and
+#       when @cr,@lf,@es,nil ... is there a better way
+#       to handle this? regexp? str.include? =~ // .match???
 # ============================================================================
 
 require 'bundler/setup'
@@ -69,11 +74,6 @@ class Censive < StringScanner
 
     @tokens = [@sep,@quote,@cr,@lf,@es,nil]
   end
-
-  # NOTE: we used @tokens = [@sep,@quote,@cr,@lf,@es,nil] and
-  #       @tokens.include?(@char) and [@cr,@lf,@es,nil] and
-  #       when @cr,@lf,@es,nil ... is there a better way
-  #       to handle this? regexp? str.include? =~ // .match???
 
   def reset(str=nil)
     self.string = str if str
