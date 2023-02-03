@@ -225,3 +225,6 @@ Subtotal,=sum(B2:B5),="01234"
 # top works in "relax" mode, bottom is compliant
 123,"CHO, JOELLE "JOJO"",456
 123,"CHO, JOELLE ""JOJO""",456
+
+# Excel mode checking
+=,=x,x=,="x",="","","=",
