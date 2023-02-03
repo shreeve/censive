@@ -69,6 +69,11 @@ class Censive < StringScanner
     @tokens = [@sep,@quote,@cr,@lf,@es,nil]
   end
 
+  # NOTE: we used @tokens = [@sep,@quote,@cr,@lf,@es,nil] and
+  #       @tokens.include?(@char) and [@cr,@lf,@es,nil] and
+  #       when @cr,@lf,@es,nil ... is there a better way
+  #       to handle this? regexp? str.include? =~ // .match???
+
   def reset(str=nil)
     self.string = str if str
     super()
