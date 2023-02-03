@@ -60,9 +60,9 @@ class Censive < StringScanner
     @relax  = relax
     @sep    = sep  .freeze
 
-    @es     = ""   .freeze
     @cr     = "\r" .freeze
     @lf     = "\n" .freeze
+    @es     = ""   .freeze
     @eq     = "="  .freeze
     @esc    = (@quote * 2).freeze
 
