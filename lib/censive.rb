@@ -220,7 +220,7 @@ end
 if __FILE__ == $0
   raw = DATA.gets("\n\n").chomp
   csv = Censive.new(raw, excel: true)
-  csv.export # (sep: "\t", excel: true)
+  csv.export(sep: "\t", excel: true)
 end
 
 __END__
