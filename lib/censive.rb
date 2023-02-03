@@ -78,8 +78,7 @@ class Censive < StringScanner
   def reset(str=nil)
     self.string = str if str
     super()
-    @char = peekch
-    @flag = nil
+    @char = rest&.chr #!# FIXME: change this
 
     @rows = nil
     @cols = @cells = 0
@@ -87,48 +86,37 @@ class Censive < StringScanner
 
   # ==[ Lexer ]==
 
-  def next_char
-    @char = nextch
-  end
+  def curr_char; @char = currchar; end
+  def next_char; @char = nextchar; end
 
   def next_token
-    case @flag
-    when @es then @flag = nil; [@cr,@lf,@es,nil].include?(@char) and return @es
-    when @cr then @flag = nil; next_char == @lf and next_char
-    when @lf then @flag = nil; next_char
-    else          @flag = nil
-    end if @flag
-
-   if @excel && @char == @eq
-      @flag = @eq
+    if @excel && @char == @eq
+      excel = true
       next_char
     end
 
-    if @tokens.include?(@char)
+    if @char == @quote # consume quoted cell
+      match = ""
+      while true
+        next_char
+        match << (scan_until(/(?=#{@quote})/o) or bomb "unclosed quote")
+        match << @quote and next if next_char == @quote
+        break if [@sep,@cr,@lf,@es,nil].include?(@char)
+        @relax or bomb "invalid character after quote"
+        match << @quote + scan_until(/(?=#{@quote})/o) + @quote
+      end
+      match
+    elsif [@sep,@cr,@lf,@es,nil].include?(@char)
       case @char
-      when @quote # consume quoted cell
-        match = ""
-        while true
-          next_char # move past the quote that got us here
-          match << (scan_until(/(?=#{@quote})/o) or bomb "unclosed quote")
-          case next_char
-          when @sep            then @flag = @es; next_char; break
-          when @quote          then match << @quote
-          when @cr,@lf,@es,nil then break
-          else @relax ? match << (@quote + @char) : bomb("invalid character after quote")
-          end
-        end
-        match
-      when @sep    then @flag = @es; next_char; @es
-      when @cr     then @flag = @cr; nil
-      when @lf     then @flag = @lf; nil
-      when @es,nil then              nil
+      when @sep then next_char; @es
+      when @cr  then next_char == @lf and next_char; nil
+      when @lf  then next_char; nil
+      else nil
       end
     else # consume unquoted cell
       match = scan_until(/(?=#{@sep}|#{@cr}|#{@lf}|\z)/o) or bomb "unexpected character"
-      match = @eq + match and @flag = nil if @flag == @eq
-      @char = peekch
-      @char == @sep and @flag = @es and next_char
+      match.prepend(@eq) if excel
+      next_char if curr_char == @sep
       match
     end
   end
@@ -161,7 +149,7 @@ class Censive < StringScanner
 
   # returns 2 (must be quoted and escaped), 1 (must be quoted), 0 (neither)
   def grok(str)
-    if idx = str.index(/(#{@quote})|#{@sep}|#{@cr}|#{@lf}/o)
+    if idx = str.index(/(#{@quote})|#{@sep}|#{@cr}|#{@lf}/o) #!# FIXME: regex injection is possible
       $1 ? 2 : str.index(/#{@quote}/o, idx) ? 2 : 1
     else
       0
@@ -223,8 +211,9 @@ end
 
 if __FILE__ == $0
   raw = DATA.gets("\n\n").chomp
-  csv = Censive.new(raw, excel: true)
-  csv.export(sep: "\t", excel: true)
+# raw = File.read(ARGV.first || "lc-2023.csv")
+  csv = Censive.new(raw, excel: true, relax: true)
+  csv.export # (sep: ":", excel: true)
 end
 
 __END__
