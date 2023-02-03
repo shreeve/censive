@@ -57,19 +57,19 @@ class Censive < StringScanner
     reset
 
     @drop   = drop
-    @eol    = eol  .freeze #!# TODO: are the '.freeze' statements helpful?
+    @eol    = eol
     @excel  = excel
     @mode   = mode
     @out    = out || $stdout
-    @quote  = quote.freeze
+    @quote  = quote
     @relax  = relax
-    @sep    = sep  .freeze
+    @sep    = sep
 
-    @cr     = "\r" .freeze
-    @lf     = "\n" .freeze
-    @es     = ""   .freeze
-    @eq     = "="  .freeze
-    @esc    = (@quote * 2).freeze
+    @cr     = "\r"
+    @lf     = "\n"
+    @es     = ""
+    @eq     = "="
+    @esc    = (@quote * 2)
 
     @tokens = [@sep,@quote,@cr,@lf,@es,nil]
   end
