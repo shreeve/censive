@@ -22,8 +22,8 @@
 # 3. Support CSV headers in first row
 # ============================================================================
 
-require 'bundler/setup'
-require 'strscan'
+require "bundler/setup"
+require "strscan"
 
 class Censive < StringScanner
 
@@ -43,10 +43,10 @@ class Censive < StringScanner
     out:   nil     , # output stream, needs to respond to <<
     quote: '"'     , # quote character
     relax: false   , # relax quote parsing so ,"Fo"o, => ,"Fo""o",
-    sep:   ','     , # column separator character
+    sep:   ","     , # column separator character
     **opts           # grab bag
   )
-    super(str || '')
+    super(str || "")
     reset
 
     @drop   = drop
