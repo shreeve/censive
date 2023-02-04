@@ -5,7 +5,7 @@ Gem::Specification.new do |s|
   s.version     = "0.10"
   s.author      = "Steve Shreeve"
   s.email       = "steve.shreeve@gmail.com"
-  s.summary     = "A quick and lightweight CSV handling library for Ruby"
+  s.summary     = 
   s.description = "A quick and lightweight CSV handling library for Ruby"
   s.homepage    = "https://github.com/shreeve/censive"
   s.license     = "MIT"
