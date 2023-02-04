@@ -22,11 +22,6 @@
 # 2. Add option to strip whitespace
 # 3. Support CSV headers in first row
 # 4. Confirm file encodings such as UTF-8, UTF-16, etc.
-#
-# NOTE: we used @tokens = [@sep,@quote,@cr,@lf,@es,nil] and
-#       @tokens.include?(@char) and [@cr,@lf,@es,nil] and
-#       when @cr,@lf,@es,nil ... is there a better way
-#       to handle this? regexp? str.include? =~ // .match???
 # ============================================================================
 
 require 'bundler/setup'
@@ -70,8 +65,6 @@ class Censive < StringScanner
     @es     = ""
     @eq     = "="
     @esc    = (@quote * 2)
-
-    @tokens = [@sep,@quote,@cr,@lf,@es,nil]
   end
 
   def reset(str=nil)
