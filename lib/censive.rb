@@ -102,9 +102,9 @@ class Censive < StringScanner
       token
     elsif [@sep,@cr,@lf,@es,nil].include?(@char)
       case @char
-      when @sep then next_char; @es
+      when @sep then next_char                     ; @es
       when @cr  then next_char == @lf and next_char; nil
-      when @lf  then next_char; nil
+      when @lf  then next_char                     ; nil
       else nil
       end
     else # consume unquoted cell
