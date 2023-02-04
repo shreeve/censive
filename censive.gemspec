@@ -2,13 +2,14 @@
 
 Gem::Specification.new do |s|
   s.name        = "censive"
-  s.version     = "0.10"
+  s.version     = "0.11"
   s.author      = "Steve Shreeve"
   s.email       = "steve.shreeve@gmail.com"
-  s.summary     = 
+  s.summary     =
   s.description = "A quick and lightweight CSV handling library for Ruby"
   s.homepage    = "https://github.com/shreeve/censive"
   s.license     = "MIT"
   s.files       = `git ls-files`.split("\n") - %w[.gitignore]
   s.executables = `(cd bin 2>&1) > /dev/null && git ls-files .`.split("\n")
+  s.add_dependency "strscan", ">= 3.0.6"
 end
