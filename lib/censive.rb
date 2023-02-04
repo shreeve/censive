@@ -8,12 +8,13 @@
 #
 # https://crystal-lang.org/api/1.7.2/CSV.html (Crystal's CSV library)
 # https://github.com/ruby/strscan/blob/master/ext/strscan/strscan.c
-# https://github.com/ruby/strscan/issues/50 for details
+# https://github.com/ruby/strscan/issues/53 for details
+# https://github.com/ruby/strscan/pull/54 for code
 # ============================================================================
 # GOALS:
 # 1. Faster than Ruby's default CSV library
 # 2. Lightweight code base with streamlined logic
-# 3. Support for most non-compliant CSV variations
+# 3. Support for most non-compliant CSV variations (eg - @relax, @excel)
 #
 # TODO:
 # 1. Support IO streaming
