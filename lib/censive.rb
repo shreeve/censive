@@ -105,7 +105,7 @@ class Censive < StringScanner
       when @sep then next_char                     ; @es
       when @cr  then next_char == @lf and next_char; nil
       when @lf  then next_char                     ; nil
-      else nil
+      else                                           nil
       end
     else # consume unquoted cell
       token = scan_until(/(?=#{@sep}|#{@cr}|#{@lf}|\z)/o) or bomb "unexpected character"
