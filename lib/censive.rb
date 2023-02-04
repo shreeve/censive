@@ -11,13 +11,11 @@
 # • https://github.com/ruby/strscan/issues/50 for details
 # ============================================================================
 # GOALS:
-#
 # 1. Faster than Ruby's default CSV library
 # 2. Lightweight code base with streamlined logic
 # 3. Support for most non-compliant CSV variations
 #
 # TODO:
-#
 # 1. Support IO streaming
 # 2. Add option to strip whitespace
 # 3. Support CSV headers in first row
@@ -77,7 +75,7 @@ class Censive < StringScanner
 
   # ==[ Lexer ]==
 
-  # # pure-ruby versions for debugging in vscode
+  # pure ruby versions for debugging
   # def curr_char;             @char = string[pos]; end
   # def next_char; scan(/./m); @char = string[pos]; end
 
@@ -212,10 +210,6 @@ if __FILE__ == $0
 end
 
 __END__
-"",x
-
-The above erroneously gives: ,,x
-
 Name,Age,Shoe
 Alice,27,5
 Bob,33,10 1/2
@@ -223,7 +217,7 @@ Charlie or "Chuck",=B2 + B3,9
 "Doug E Fresh",="007",10
 Subtotal,=sum(B2:B5),="01234"
 
-# top works in "relax" mode, bottom is compliant
+# first line works in "relax" mode, bottom line is compliant
 123,"CHO, JOELLE "JOJO"",456
 123,"CHO, JOELLE ""JOJO""",456
 
