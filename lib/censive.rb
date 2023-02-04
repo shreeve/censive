@@ -207,6 +207,10 @@ if __FILE__ == $0
 end
 
 __END__
+="",0123
+
+The above is an error... produces ",,="0123""
+
 Name,Age,Shoe
 Alice,27,5
 Bob,33,10 1/2
@@ -219,4 +223,5 @@ Subtotal,=sum(B2:B5),="01234"
 123,"CHO, JOELLE ""JOJO""",456
 
 # Excel mode checking
-=,=x,x=,="x",="","","=",
+=,=x,x=,="x",="","","=",123,0123,="123",="0123"
+,=x,x=,x,,,,,,=,,123,="0123",123,,="0123" # <= a little off
