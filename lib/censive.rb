@@ -203,7 +203,7 @@ if __FILE__ == $0
   raw = DATA.gets("\n\n").chomp
 # raw = File.read(ARGV.first || "lc-2023.csv")
   csv = Censive.new(raw, excel: true, relax: true)
-  csv.export(sep: ",", excel: true)
+  csv.export # (sep: ",", excel: true)
 end
 
 __END__
