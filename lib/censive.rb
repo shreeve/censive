@@ -19,7 +19,6 @@
 # 1. Support IO streaming
 # 2. Add option to strip whitespace
 # 3. Support CSV headers in first row
-# 4. Confirm file encodings such as UTF-8, UTF-16, etc.
 # ============================================================================
 
 require 'bundler/setup'
