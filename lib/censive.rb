@@ -207,9 +207,9 @@ if __FILE__ == $0
 end
 
 __END__
-="",0123
+"",x
 
-The above is an error... produces ",,="0123""
+The above erroneously gives: ,,x
 
 Name,Age,Shoe
 Alice,27,5
