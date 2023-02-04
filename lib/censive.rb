@@ -96,6 +96,7 @@ class Censive < StringScanner
         @relax or bomb "invalid character after quote"
         match << @quote + scan_until(/(?=#{@quote})/o) + @quote
       end
+      next_char if @char == @sep
       match
     elsif [@sep,@cr,@lf,@es,nil].include?(@char)
       case @char
