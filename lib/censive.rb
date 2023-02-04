@@ -153,12 +153,10 @@ class Censive < StringScanner
     # drop trailing empty columns
     row.pop while row.last.empty? if @drop
 
-    #!# FIXME: Excel output needs to protect 0-leading numbers
-
     s,q = @sep, @quote
     out = case @mode
     when :compact
-      case grok(row.join)
+      case @excel ? 2 : grok(row.join)
       when 0
         row
       when 1
@@ -167,6 +165,7 @@ class Censive < StringScanner
         end
       else
         row.map do |col|
+          @excel && col =~ /\A0\d*\z/ ? "=#{q}#{col}#{q}" :
           case grok(col)
           when 0 then col
           when 1 then "#{q}#{col}#{q}"
@@ -204,7 +203,7 @@ if __FILE__ == $0
   raw = DATA.gets("\n\n").chomp
 # raw = File.read(ARGV.first || "lc-2023.csv")
   csv = Censive.new(raw, excel: true, relax: true)
-  csv.export # (sep: ":", excel: true)
+  csv.export(sep: ",", excel: true)
 end
 
 __END__
