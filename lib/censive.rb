@@ -77,9 +77,9 @@ class Censive < StringScanner
 
   # ==[ Lexer ]==
 
-  # pure-ruby versions for debugging in vscode
-  # def curr_char;             @char = rest.chr; end
-  # def next_char; scan(/./m); @char = rest.chr; end
+  # # pure-ruby versions for debugging in vscode
+  # def curr_char;             @char = string[pos]; end
+  # def next_char; scan(/./m); @char = string[pos]; end
 
   def curr_char; @char = currchar; end
   def next_char; @char = nextchar; end
