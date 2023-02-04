@@ -6,9 +6,9 @@
 # Author: Steve Shreeve (steve.shreeve@gmail.com)
 #   Date: Feb 3, 2023
 #
-# • https://crystal-lang.org/api/1.7.2/CSV.html (Crystal's CSV library)
-# • https://github.com/ruby/strscan/blob/master/ext/strscan/strscan.c
-# • https://github.com/ruby/strscan/issues/50 for details
+# https://crystal-lang.org/api/1.7.2/CSV.html (Crystal's CSV library)
+# https://github.com/ruby/strscan/blob/master/ext/strscan/strscan.c
+# https://github.com/ruby/strscan/issues/50 for details
 # ============================================================================
 # GOALS:
 # 1. Faster than Ruby's default CSV library
