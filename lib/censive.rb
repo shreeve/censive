@@ -177,7 +177,13 @@ class Censive < StringScanner
         end
       end
     when :full
-      row.map {|col| "#{q}#{col.gsub(q, @esc)}#{q}" }
+      if @excel
+        row.map do |col|
+          col =~ /\A0\d*\z/ ? "=#{q}#{col}#{q}" : "#{q}#{col.gsub(q, @esc)}#{q}"
+        end
+      else
+        row.map {|col| "#{q}#{col.gsub(q, @esc)}#{q}" }
+      end
     end.join(s)
 
     @out << out + @eol
