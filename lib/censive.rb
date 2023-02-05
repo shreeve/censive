@@ -22,6 +22,9 @@
 require "strscan"
 
 class Censive < StringScanner
+  def self.parse(...)
+    new(...).parse
+  end
 
   def self.writer(obj=nil, **opts, &code)
     case obj
