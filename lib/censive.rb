@@ -75,39 +75,36 @@ class Censive < StringScanner
 
   # ==[ Lexer ]==
 
-  # strscan 3.0.6 version
-  def next_char; @char = nextchar; end
-
   def next_token
     if @excel && @char == @eq
       excel = true
-      next_char
+      (@char = nextchar)
     end
 
     if @char == @quote # consume quoted cell
       token = ""
       while true
-        next_char
+        (@char = nextchar)
         token << (scan_until(/(?=#{@quote})/o) or bomb "unclosed quote")
-        token << @quote and next if next_char == @quote
+        token << @quote and next if (@char = nextchar) == @quote
         break if [@sep,@cr,@lf,@es,nil].include?(@char)
         @relax or bomb "invalid character after quote"
         token << @quote + scan_until(/(?=#{@quote})/o) + @quote
       end
-      next_char if @char == @sep
+      (@char = nextchar) if @char == @sep
       token
       @strip ? token.strip : token
     elsif [@sep,@cr,@lf,@es,nil].include?(@char)
       case @char
-      when @sep then next_char                     ; @es
-      when @cr  then next_char == @lf and next_char; nil
-      when @lf  then next_char                     ; nil
-      else                                           nil
+      when @sep then (@char = nextchar)                              ; @es
+      when @cr  then (@char = nextchar) == @lf and (@char = nextchar); nil
+      when @lf  then (@char = nextchar)                              ; nil
+      else                                                             nil
       end
     else # consume unquoted cell
       token = scan_until(/(?=#{@sep}|#{@cr}|#{@lf}|\z)/o) or bomb "unexpected character"
       token.prepend(@eq) if excel
-      next_char if (@char = currchar) == @sep
+      (@char = currchar) == @sep and (@char = nextchar)
       token
       @strip ? token.strip : token
     end
