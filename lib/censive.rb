@@ -18,7 +18,6 @@
 #
 # TODO:
 # 1. Support IO streaming
-# 2. Add option to strip whitespace
 # ============================================================================
 
 class Censive
@@ -40,6 +39,7 @@ class Censive
     quote: '"'     , # quote character
     relax: false   , # relax quote parsing so ,"Fo"o, => ,"Fo""o",
     sep:   ","     , # column separator character
+    strip: false   , # strip fields when reading
     **opts           # grab bag
   )
     @drop   = drop
@@ -51,6 +51,7 @@ class Censive
     @relax  = relax
     @sep    = sep
     @string = str
+    @strip  = strip
 
     @cr     = "\r"
     @lf     = "\n"
@@ -99,6 +100,7 @@ class Censive
       end
       next_char if @char == @sep
       token
+      @strip ? token.strip : token
     elsif [@sep,@cr,@lf,@es,nil].include?(@char)
       case @char
       when @sep then next_char                     ; @es
@@ -111,6 +113,7 @@ class Censive
       token.prepend(@eq) if excel
       next_char if curr_char == @sep
       token
+      @strip ? token.strip : token
     end
   end
 
