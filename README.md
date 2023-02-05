@@ -74,6 +74,25 @@ Or, you can be more succinct with:
 ```ruby
 require 'censive'
 
-csv = Censive.new(File.read('data.csv'))
-csv.export(sep: "\t")
+csv = Censive.new(DATA.read, excel: true, relax: true, strip: true)
+csv.export(sep: "|", excel: true) # pipe separated, protect leading zeroes
+
+__END__
+Name,Age, Shoe
+  Alice,  27,5
+Bob,  33,10 1/2
+  Charlie or "Chuck",=B2 + B3,9
+"Doug E Fresh",="007",001122
+Subtotal,=sum(B2:B5),="01234"
+```
+
+Which returns:
+
+```
+Name|Age|Shoe
+Alice|27|5
+Bob|33|10 1/2
+"Charlie or ""Chuck"""|=B2 + B3|9
+Doug E Fresh|="007"|="001122"
+Subtotal|=sum(B2:B5)|="01234"
 ```
