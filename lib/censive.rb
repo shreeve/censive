@@ -31,34 +31,32 @@ class Censive < StringScanner
     end
   end
 
-  def initialize(str=nil,
-    drop:   false   , # drop trailing empty fields?
-    excel:  false   , # literals ="01" formulas =A1 + B2 http://bit.ly/3Y7jIvc
-    mode:   :compact, # export mode: compact or full
-    out:    $stdout , # output stream, needs to respond to <<
-    quote:  '"'     , # quote character
-    relax:  false   , # relax quote parsing so ,"Fo"o, => ,"Fo""o",
-    rowsep: "\n"    , # row separator for export
-    sep:    ","     , # column separator character
-    strip:  false   , # strip fields when reading
+  def initialize(str="",
+    drop:     false   , # drop trailing empty fields?
+    encoding: "utf-8" , # character encoding
+    excel:    false   , # literals ="01" formulas =A1 + B2 http://bit.ly/3Y7jIvc
+    mode:     :compact, # export mode: compact or full
+    out:      $stdout , # output stream, needs to respond to <<
+    quote:    '"'     , # quote character
+    relax:    false   , # relax quote parsing so ,"Fo"o, => ,"Fo""o",
+    rowsep:   "\n"    , # row separator for export
+    sep:      ","     , # column separator character
+    strip:    false   , # strip fields when reading
     **opts            # grab bag
   )
-    str = File.read(str) if str =~ /\A.{,100}\z/
-    super(str || "")
-    reset
-
     # options
-    @drop    = drop
-    @excel   = excel
-    @mode    = mode
-    @out     = out
-    @quote   = quote
-    @relax   = relax
-    @rowsep  = rowsep
-    @sep     = sep
-    @strip   = strip
+    @drop     = drop
+    @encoding = encoding
+    @excel    = excel
+    @mode     = mode
+    @out      = out
+    @quote    = quote
+    @relax    = relax
+    @rowsep   = rowsep
+    @sep      = sep
+    @strip    = strip
 
-    # determined
+    # definitions
     @cr  = "\r"
     @lf  = "\n"
     @es  = ""
@@ -66,6 +64,13 @@ class Censive < StringScanner
     @esc = (@quote * 2)
     @eol = /#{@cr}#{@lf}?|#{@lf}|\z/o             # end of line
     @eoc = /(?=#{"\\" + @sep}|#{@cr}|#{@lf}|\z)/o # end of cell
+
+    # data source
+    if str.size < 100 && File.readable?(str)
+      str = File.open(str, "r:#{encoding}").read
+    end
+    super(str)
+    reset
   end
 
   def reset(str=nil)
