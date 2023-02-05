@@ -43,6 +43,7 @@ class Censive < StringScanner
     strip:  false   , # strip fields when reading
     **opts            # grab bag
   )
+    str = File.read(str) if str =~ /\A.{,100}\z/
     super(str || "")
     reset
 
