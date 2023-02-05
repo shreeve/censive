@@ -14,12 +14,11 @@
 # GOALS:
 # 1. Faster than Ruby's default CSV library
 # 2. Lightweight code base with streamlined logic
-# 3. Support for most non-compliant CSV variations (eg - @relax, @excel)
+# 3. Support most non-compliant CSV variations (eg - @relax, @excel)
 #
 # TODO:
 # 1. Support IO streaming
 # 2. Add option to strip whitespace
-# 3. Support CSV headers in first row
 # ============================================================================
 
 require "bundler/setup"
