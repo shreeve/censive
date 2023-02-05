@@ -92,7 +92,6 @@ class Censive < StringScanner
         token << @quote + scan_until(/(?=#{@quote})/o) + @quote
       end
       (@char = nextchar) if @char == @sep
-      token
       @strip ? token.strip : token
     elsif [@sep,@cr,@lf,@es,nil].include?(@char)
       case @char
@@ -105,7 +104,6 @@ class Censive < StringScanner
       token = scan_until(/(?=#{@sep}|#{@cr}|#{@lf}|\z)/o) or bomb "unexpected character"
       token.prepend(@eq) if excel
       (@char = currchar) == @sep and (@char = nextchar)
-      token
       @strip ? token.strip : token
     end
   end
