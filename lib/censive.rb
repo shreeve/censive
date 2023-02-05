@@ -21,10 +21,7 @@
 # 2. Add option to strip whitespace
 # ============================================================================
 
-require "bundler/setup"
-require "strscan"
-
-class Censive < StringScanner
+class Censive
 
   def self.writer(obj=nil, **opts, &code)
     case obj
@@ -45,9 +42,6 @@ class Censive < StringScanner
     sep:   ","     , # column separator character
     **opts           # grab bag
   )
-    super(str || "")
-    reset
-
     @drop   = drop
     @eol    = eol
     @excel  = excel
@@ -56,30 +50,36 @@ class Censive < StringScanner
     @quote  = quote
     @relax  = relax
     @sep    = sep
+    @string = str
 
     @cr     = "\r"
     @lf     = "\n"
     @es     = ""
     @eq     = "="
     @esc    = (@quote * 2)
+
+    reset
   end
 
   def reset(str=nil)
-    self.string = str if str
-    super()
-    @char = curr_char
-    @rows = nil
-    @cols = @cells = 0
+    @string = str if str
+    @pos    = 0
+    @char   = @string[@pos]
+    @rows   = nil
+    @cols   = @cells = 0
   end
 
   # ==[ Lexer ]==
 
-  # pure ruby versions for debugging
-  # def curr_char;             @char = string[pos]; end
-  # def next_char; scan(/./m); @char = string[pos]; end
+  def curr_char; @char = @string[@pos     ]; end
+  def next_char; @char = @string[@pos += 1]; end
 
-  def curr_char; @char = currchar; end
-  def next_char; @char = nextchar; end
+  def scan_until(regx)
+    posn = @string.index(regx, @pos) or return
+    text = @string[@pos...posn]
+    @pos = posn
+    text
+  end
 
   def next_token
     if @excel && @char == @eq
