@@ -75,20 +75,6 @@ class Censive < StringScanner
 
   # ==[ Lexer ]==
 
-  # # pure-ruby, non-strscan version
-  # def curr_char; @char = @string[@pos     ]; end
-  # def next_char; @char = @string[@pos += 1]; end
-  # def scan_until(regx)
-  #   posn = @string.index(regx, @pos) or return
-  #   text = @string[@pos...posn]
-  #   @pos = posn
-  #   text
-  # end
-
-  # # pure ruby, strscan version for debugging
-  # def curr_char;             @char = string[pos]; end
-  # def next_char; scan(/./m); @char = string[pos]; end
-
   # strscan 3.0.6 version
   def next_char; @char = nextchar; end
 
