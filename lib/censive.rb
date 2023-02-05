@@ -86,8 +86,7 @@ class Censive < StringScanner
         token << @quote and next if scan(@quote)
         break if scan(@eoc)
         @relax or bomb "invalid character after quote"
-        quoted = scan_until(/#{@quote}/o) or bomb "invalid inline quote"
-        token << @quote + quoted + @quote
+        token << @quote + (scan_until(/#{@quote}/o) or bomb "bad inline quote")
       end
     elsif scan(@sep) then return @es
     elsif scan(@eol) then return nil
