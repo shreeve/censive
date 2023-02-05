@@ -78,32 +78,32 @@ class Censive < StringScanner
   def next_token
     if @excel && @char == @eq
       excel = true
-      (@char = nextchar)
+      @char = nextchar
     end
 
     if @char == @quote # consume quoted cell
       token = ""
       while true
-        (@char = nextchar)
+        @char = nextchar
         token << (scan_until(/(?=#{@quote})/o) or bomb "unclosed quote")
         token << @quote and next if (@char = nextchar) == @quote
         break if [@sep,@cr,@lf,@es,nil].include?(@char)
         @relax or bomb "invalid character after quote"
         token << @quote + scan_until(/(?=#{@quote})/o) + @quote
       end
-      (@char = nextchar) if @char == @sep
+      @char = nextchar if @char == @sep
       @strip ? token.strip : token
     elsif [@sep,@cr,@lf,@es,nil].include?(@char)
       case @char
-      when @sep then (@char = nextchar)                              ; @es
-      when @cr  then (@char = nextchar) == @lf and (@char = nextchar); nil
-      when @lf  then (@char = nextchar)                              ; nil
-      else                                                             nil
+      when @sep then  @char = nextchar                             ; @es
+      when @cr  then (@char = nextchar) == @lf and @char = nextchar; nil
+      when @lf  then  @char = nextchar                             ; nil
+      else                                                           nil
       end
     else # consume unquoted cell
       token = scan_until(/(?=#{@sep}|#{@cr}|#{@lf}|\z)/o) or bomb "unexpected character"
       token.prepend(@eq) if excel
-      (@char = currchar) == @sep and (@char = nextchar)
+      @char = nextchar if (@char = currchar) == @sep
       @strip ? token.strip : token
     end
   end
