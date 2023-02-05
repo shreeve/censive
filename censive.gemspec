@@ -11,5 +11,4 @@ Gem::Specification.new do |s|
   s.license     = "MIT"
   s.files       = `git ls-files`.split("\n") - %w[.gitignore]
   s.executables = `(cd bin 2>&1) > /dev/null && git ls-files .`.split("\n")
-  s.add_dependency "strscan", ">= 3.0.6"
 end
