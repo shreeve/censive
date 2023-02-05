@@ -72,6 +72,7 @@ class Censive
 
   # ==[ Lexer ]==
 
+  # pure-ruby, non-strscan version
   def curr_char; @char = @string[@pos     ]; end
   def next_char; @char = @string[@pos += 1]; end
 
