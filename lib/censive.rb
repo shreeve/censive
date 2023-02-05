@@ -47,9 +47,13 @@ class Censive < StringScanner
     strip:    false   , # strip fields when reading
     **opts            # grab bag
   )
+    # data source
+    str = File.open(str, "r:#{encoding}").read if !str[100] && File.readable?(str)
+    super(str)
+    reset
+
     # options
     @drop     = drop
-    @encoding = encoding
     @excel    = excel
     @mode     = mode
     @out      = out
@@ -67,13 +71,6 @@ class Censive < StringScanner
     @esc = (@quote * 2)
     @eol = /#{@cr}#{@lf}?|#{@lf}|\z/o             # end of line
     @eoc = /(?=#{"\\" + @sep}|#{@cr}|#{@lf}|\z)/o # end of cell
-
-    # data source
-    if str.size < 100 && File.readable?(str)
-      str = File.open(str, "r:#{encoding}").read
-    end
-    super(str)
-    reset
   end
 
   def reset(str=nil)
