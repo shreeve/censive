@@ -101,7 +101,7 @@ class Censive < StringScanner
       else                                                           nil
       end
     else # consume unquoted cell
-      token = scan_until(/(?=#{@sep}|#{@cr}|#{@lf}|\z)/o) or bomb "unexpected character"
+      token = scan_until(/(?=#{"\\"+@sep}|#{@cr}|#{@lf}|\z)/o) or bomb "unexpected character"
       token.prepend(@eq) if excel
       @char = nextchar if (@char = currchar) == @sep
       @strip ? token.strip : token
@@ -136,7 +136,7 @@ class Censive < StringScanner
 
   # returns 2 (must be quoted and escaped), 1 (must be quoted), 0 (neither)
   def grok(str)
-    if idx = str.index(/(#{@quote})|#{@sep}|#{@cr}|#{@lf}/o) #!# FIXME: regex injection?
+    if idx = str.index(/(#{@quote})|#{"\\"+@sep}|#{@cr}|#{@lf}/o)
       $1 ? 2 : str.index(/#{@quote}/o, idx) ? 2 : 1
     else
       0
@@ -157,7 +157,7 @@ class Censive < StringScanner
         row
       when 1
         row.map do |col|
-          col.match?(/#{@sep}|#{@cr}|#{@lf}/o) ? "#{q}#{col}#{q}" : col
+          col.match?(/#{"\\"+@sep}|#{@cr}|#{@lf}/o) ? "#{q}#{col}#{q}" : col
         end
       else
         row.map do |col|
