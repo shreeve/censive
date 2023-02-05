@@ -20,7 +20,10 @@
 # 1. Support IO streaming
 # ============================================================================
 
-class Censive
+require "bundler/setup"
+require "strscan"
+
+class Censive < StringScanner
 
   def self.writer(obj=nil, **opts, &code)
     case obj
@@ -42,6 +45,9 @@ class Censive
     strip: false   , # strip fields when reading
     **opts           # grab bag
   )
+    super(str || "")
+    reset
+
     @drop   = drop
     @eol    = eol
     @excel  = excel
@@ -50,7 +56,6 @@ class Censive
     @quote  = quote
     @relax  = relax
     @sep    = sep
-    @string = str
     @strip  = strip
 
     @cr     = "\r"
@@ -58,30 +63,35 @@ class Censive
     @es     = ""
     @eq     = "="
     @esc    = (@quote * 2)
-
-    reset
   end
 
   def reset(str=nil)
-    @string = str if str
-    @pos    = 0
-    @char   = @string[@pos]
-    @rows   = nil
-    @cols   = @cells = 0
+    self.string = str if str
+    super()
+    @char = curr_char
+    @rows = nil
+    @cols = @cells = 0
   end
 
   # ==[ Lexer ]==
 
-  # pure-ruby, non-strscan version
-  def curr_char; @char = @string[@pos     ]; end
-  def next_char; @char = @string[@pos += 1]; end
+  # # pure-ruby, non-strscan version
+  # def curr_char; @char = @string[@pos     ]; end
+  # def next_char; @char = @string[@pos += 1]; end
+  # def scan_until(regx)
+  #   posn = @string.index(regx, @pos) or return
+  #   text = @string[@pos...posn]
+  #   @pos = posn
+  #   text
+  # end
 
-  def scan_until(regx)
-    posn = @string.index(regx, @pos) or return
-    text = @string[@pos...posn]
-    @pos = posn
-    text
-  end
+  # # pure ruby, strscan version for debugging
+  # def curr_char;             @char = string[pos]; end
+  # def next_char; scan(/./m); @char = string[pos]; end
+
+  # strscan 3.0.6 version
+  def curr_char; @char = currchar; end
+  def next_char; @char = nextchar; end
 
   def next_token
     if @excel && @char == @eq
