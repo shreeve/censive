@@ -4,23 +4,21 @@
 # censive - A quick and lightweight CSV handling library for Ruby
 #
 # Author: Steve Shreeve (steve.shreeve@gmail.com)
-#   Date: Feb 4, 2023
+#   Date: Feb 5, 2023
 #
 # https://crystal-lang.org/api/1.7.2/CSV.html (Crystal's CSV library)
 # https://github.com/ruby/strscan/blob/master/ext/strscan/strscan.c
-# https://github.com/ruby/strscan/issues/53 for details
-# https://github.com/ruby/strscan/pull/54 for code
+#
+# Thanks to Sutou Kouhei (kou) for his excellent advice on using scan
 # ============================================================================
 # GOALS:
 # 1. Faster than Ruby's default CSV library
-# 2. Lightweight code base with streamlined logic
+# 2. Lightweight code with streamlined and optimized logic
 # 3. Support most non-compliant CSV variations (eg - @excel, @relax, @strip)
 #
-# TODO:
-# 1. Support IO streaming
+# TODO: Support IO streaming
 # ============================================================================
 
-require "bundler/setup"
 require "strscan"
 
 class Censive < StringScanner
@@ -34,41 +32,44 @@ class Censive < StringScanner
   end
 
   def initialize(str=nil,
-    drop:  false   , # drop trailing empty fields?
-    eol:   "\n"    , # line endings for exports
-    excel: false   , # literals ="01" formulas =A1 + B2 http://bit.ly/3Y7jIvc
-    mode:  :compact, # export mode: compact or full
-    out:   nil     , # output stream, needs to respond to <<
-    quote: '"'     , # quote character
-    relax: false   , # relax quote parsing so ,"Fo"o, => ,"Fo""o",
-    sep:   ","     , # column separator character
-    strip: false   , # strip fields when reading
-    **opts           # grab bag
+    drop:   false   , # drop trailing empty fields?
+    excel:  false   , # literals ="01" formulas =A1 + B2 http://bit.ly/3Y7jIvc
+    mode:   :compact, # export mode: compact or full
+    out:    $stdout , # output stream, needs to respond to <<
+    quote:  '"'     , # quote character
+    relax:  false   , # relax quote parsing so ,"Fo"o, => ,"Fo""o",
+    rowsep: "\n"    , # row separator for export
+    sep:    ","     , # column separator character
+    strip:  false   , # strip fields when reading
+    **opts            # grab bag
   )
     super(str || "")
     reset
 
-    @drop   = drop
-    @eol    = eol
-    @excel  = excel
-    @mode   = mode
-    @out    = out || $stdout
-    @quote  = quote
-    @relax  = relax
-    @sep    = sep
-    @strip  = strip
+    # options
+    @drop    = drop
+    @excel   = excel
+    @mode    = mode
+    @out     = out
+    @quote   = quote
+    @relax   = relax
+    @rowsep  = rowsep
+    @sep     = sep
+    @strip   = strip
 
-    @cr     = "\r"
-    @lf     = "\n"
-    @es     = ""
-    @eq     = "="
-    @esc    = (@quote * 2)
+    # determined
+    @cr  = "\r"
+    @lf  = "\n"
+    @es  = ""
+    @eq  = "="
+    @esc = (@quote * 2)
+    @eol = /#{@cr}#{@lf}?|#{@lf}|\z/o             # end of line
+    @eoc = /(?=#{"\\" + @sep}|#{@cr}|#{@lf}|\z)/o # end of cell
   end
 
   def reset(str=nil)
     self.string = str if str
     super()
-    @char = currchar
     @rows = nil
     @cols = @cells = 0
   end
@@ -76,36 +77,26 @@ class Censive < StringScanner
   # ==[ Lexer ]==
 
   def next_token
-    if @excel && @char == @eq
-      excel = true
-      @char = nextchar
-    end
+    excel = true if @excel && scan(@eq)
 
-    if @char == @quote # consume quoted cell
+    if scan(@quote) # consume quoted cell
       token = ""
       while true
-        @char = nextchar
-        token << (scan_until(/(?=#{@quote})/o) or bomb "unclosed quote")
-        token << @quote and next if (@char = nextchar) == @quote
-        break if [@sep,@cr,@lf,@es,nil].include?(@char)
+        token << (scan_until(/#{@quote}/o) or bomb "unclosed quote")[0..-2]
+        token << @quote and next if scan(@quote)
+        break if scan(@eoc)
         @relax or bomb "invalid character after quote"
-        token << @quote + scan_until(/(?=#{@quote})/o) + @quote
+        quoted = scan_until(/#{@quote}/o) or bomb "invalid inline quote"
+        token << @quote + quoted + @quote
       end
-      @char = nextchar if @char == @sep
-      @strip ? token.strip : token
-    elsif [@sep,@cr,@lf,@es,nil].include?(@char)
-      case @char
-      when @sep then  @char = nextchar                             ; @es
-      when @cr  then (@char = nextchar) == @lf and @char = nextchar; nil
-      when @lf  then  @char = nextchar                             ; nil
-      else                                                           nil
-      end
+    elsif scan(@sep) then return @es
+    elsif scan(@eol) then return nil
     else # consume unquoted cell
-      token = scan_until(/(?=#{"\\"+@sep}|#{@cr}|#{@lf}|\z)/o) or bomb "unexpected character"
+      token = scan_until(@eoc) or bomb "unexpected character"
       token.prepend(@eq) if excel
-      @char = nextchar if (@char = currchar) == @sep
-      @strip ? token.strip : token
     end
+    scan(@sep)
+    @strip ? token.strip : token
   end
 
   def bomb(msg)
@@ -179,7 +170,7 @@ class Censive < StringScanner
       end
     end.join(s)
 
-    @out << out + @eol
+    @out << out + @rowsep
   end
 
   def each
