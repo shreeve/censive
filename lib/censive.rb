@@ -68,7 +68,7 @@ class Censive < StringScanner
   def reset(str=nil)
     self.string = str if str
     super()
-    @char = curr_char
+    @char = currchar
     @rows = nil
     @cols = @cells = 0
   end
@@ -90,7 +90,6 @@ class Censive < StringScanner
   # def next_char; scan(/./m); @char = string[pos]; end
 
   # strscan 3.0.6 version
-  def curr_char; @char = currchar; end
   def next_char; @char = nextchar; end
 
   def next_token
@@ -122,7 +121,7 @@ class Censive < StringScanner
     else # consume unquoted cell
       token = scan_until(/(?=#{@sep}|#{@cr}|#{@lf}|\z)/o) or bomb "unexpected character"
       token.prepend(@eq) if excel
-      next_char if curr_char == @sep
+      next_char if (@char = currchar) == @sep
       token
       @strip ? token.strip : token
     end
