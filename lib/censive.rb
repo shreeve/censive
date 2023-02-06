@@ -39,7 +39,7 @@ class Censive < StringScanner
     encoding: "utf-8" , # character encoding
     excel:    false   , # literals ="01" formulas =A1 + B2 http://bit.ly/3Y7jIvc
     mode:     :compact, # export mode: compact or full
-    out:      $stdout , # output stream, needs to respond to <<
+    out:      nil     , # output stream, needs to respond to <<
     quote:    '"'     , # quote character
     relax:    false   , # relax quote parsing so ,"Fo"o, => ,"Fo""o",
     rowsep:   "\n"    , # row separator for export
