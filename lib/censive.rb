@@ -57,18 +57,20 @@ class Censive < StringScanner
     super(str)
     reset
 
-    # options
+    # config options
     @drop     = drop
     @excel    = excel
     @mode     = mode
     @out      = out || $stdout
-    @quote    = quote
     @relax    = relax
-    @rowsep   = rowsep
-    @sep      = sep
     @strip    = strip
 
-    # strings
+    # config strings
+    @quote    = quote
+    @rowsep   = rowsep
+    @sep      = sep
+
+    # static strings
     @cr       = "\r"
     @lf       = "\n"
     @es       = ""
