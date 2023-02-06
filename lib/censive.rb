@@ -90,6 +90,9 @@ class Censive < StringScanner
     @seps     = /#{@sep}+/o
     @unquoted = /[^#{@quote}#{@sep}#{@cr}#{@lf}][^#{@quote}#{@cr}#{@lf}]*/o
     @zeroes   = /\A0\d*\z/
+
+    # setup row parser
+    @row_parser = row_parser
   end
 
   def reset(str=nil)
@@ -139,7 +142,7 @@ class Censive < StringScanner
 
   def parse
     @rows = []
-    while row = next_row
+    while row = @row_parser.next
       @rows << row
       count = row.size
       @cols = count if count > @cols
@@ -148,12 +151,16 @@ class Censive < StringScanner
     @rows
   end
 
-  def next_row
-    token = next_token or return
-    row = []
-    row.push(*token)
-    row.push(*token) while token = next_token
-    row
+  def row_parser
+    Enumerator.new do |yielder|
+      loop do
+        tokens = next_token or yielder.yield
+        row = []
+        row.push(*tokens)
+        row.push(*tokens) while tokens = next_token
+        yielder.yield row
+      end
+    end
   end
 
   def each
