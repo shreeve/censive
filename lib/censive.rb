@@ -53,24 +53,29 @@ class Censive < StringScanner
     reset
 
     # options
-    @drop     = drop
-    @excel    = excel
-    @mode     = mode
-    @out      = out
-    @quote    = quote
-    @relax    = relax
-    @rowsep   = rowsep
-    @sep      = sep
-    @strip    = strip
+    @drop   = drop
+    @excel  = excel
+    @mode   = mode
+    @out    = out || $stdout
+    @quote  = quote
+    @relax  = relax
+    @rowsep = rowsep
+    @sep    = sep
+    @strip  = strip
 
-    # definitions
+    # strings
     @cr  = "\r"
     @lf  = "\n"
     @es  = ""
     @eq  = "="
     @esc = (@quote * 2)
+
+    # regexes
     @eol = /#{@cr}#{@lf}?|#{@lf}|\z/o             # end of line
     @eoc = /(?=#{"\\" + @sep}|#{@cr}|#{@lf}|\z)/o # end of cell
+    @eqq = [@eq , @quote].join # used for parsing in excel mode
+    @seq = [@sep, @eq   ].join # used for parsing in excel mode
+    @unquoted = /[^#{@quote}#{@sep}#{@cr}#{@lf}][^#{@quote}#{@cr}#{@lf}]*/o
   end
 
   def reset(str=nil)
