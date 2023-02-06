@@ -18,9 +18,9 @@
 #
 # TODO:
 # 1. Support IO streaming
-# 2. Will using String#freeze speed things up?
-# 3. Review all encodings, we may be losing speed when mixing encodings
-# 4. Huge speedup possible if our @unquoted regex reads beyond @cr?@lf's
+# 2. Review all encodings, we may be losing speed when mixing encodings
+# 3. Huge speedup possible if our @unquoted regex reads beyond @cr?@lf's
+# 4. Will using String#freeze give us a speed up?
 # 5. Implement support for scan_until(string) <= right now only regex is valid
 # ============================================================================
 
@@ -57,6 +57,9 @@ class Censive < StringScanner
     super(str)
     reset
 
+    # ensure we use the same encoding
+    @encoding = str.encoding
+
     # config options
     @drop     = drop
     @excel    = excel
@@ -88,6 +91,10 @@ class Censive < StringScanner
     @quotable = /#{"\\"+@sep}|#{@cr}|#{@lf}/o
     @quotes   = /#{@quote}/o
     @seps     = /#{@sep}+/o
+    #!# TODO: *massive* optimization if we change end to [^#{@quote}]
+    #!# TODO: we can also simplify the scan to... scan(@notquote) [ie - /^[",\r\n]/ and then do a scan_until(@quote) ]
+    #!# TODO: also, we can convert next_row() to a generator, that queue's up cells and rows and hands them off
+    #!# TODO: as needed... if a file has no quotes, this sucker will process it in ONE SWOOP!!!
     @unquoted = /[^#{@quote}#{@sep}#{@cr}#{@lf}][^#{@quote}#{@cr}#{@lf}]*/o
     @zeroes   = /\A0\d*\z/
   end
@@ -112,7 +119,7 @@ class Censive < StringScanner
       tokens = match.split(@sep, -1)
       @strip ? tokens.map!(&:strip) : tokens
     elsif scan(@quote) || (@excel && (excel = scan(@eqq))) # quoted cell
-      token = ""
+      token = "" # @es # declare token (not used)
       while true
         token << (scan_until(@quotes) or bomb "unclosed quote")[0..-2]
         token << @quote and next if scan(@quote)
@@ -239,6 +246,11 @@ Bob,33,10 1/2
 Charlie or "Chuck",=B2 + B3,9
 "Doug E Fresh",="007",10
 Subtotal,=sum(B2:B5),="01234"
+
+A,B,C,D
+A,B,"C",D
+A,B,C",D
+A,B,"C",D
 
 # first line works in "relax" mode, bottom line is compliant
 123,"CHO, JOELLE "JOJO"",456
