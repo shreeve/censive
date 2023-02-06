@@ -45,7 +45,7 @@ class Censive < StringScanner
     rowsep:   "\n"    , # row separator for export
     sep:      ","     , # column separator character
     strip:    false   , # strip fields when reading
-    **opts            # grab bag
+    **opts              # grab bag
   )
     # data source
     str = File.open(str, "r:#{encoding}").read if !str[100] && File.readable?(str)
