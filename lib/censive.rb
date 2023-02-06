@@ -88,25 +88,33 @@ class Censive < StringScanner
   # ==[ Lexer ]==
 
   def next_token
-    excel = true if @excel && scan(@eq)
-
-    if scan(@quote) # consume quoted cell
+    if match = scan(@unquoted) # unquoted cell(s)
+      if check(@quote) && !match.chomp!(@sep) # no sep before final quote
+        if @excel && !match.chomp!(@seq) # excel mode allows sep, eq, quote
+          match << (scan_until(@eoc) or bomb "unexpected character")
+          scan(@sep)
+        end
+      end
+      tokens = match.split(@sep, -1)
+      @strip ? tokens.map!(&:strip) : tokens
+    elsif scan(@quote) || (@excel && (excel = scan(@eqq))) # quoted cell
       token = ""
       while true
         token << (scan_until(/#{@quote}/o) or bomb "unclosed quote")[0..-2]
         token << @quote and next if scan(@quote)
-        break if scan(@eoc)
+        scan(@eoc) and break
         @relax or bomb "invalid character after quote"
         token << @quote + (scan_until(/#{@quote}/o) or bomb "bad inline quote")
       end
-    elsif scan(@sep) then return @es
-    elsif scan(@eol) then return nil
-    else # consume unquoted cell
-      token = scan_until(@eoc) or bomb "unexpected character"
-      token.prepend(@eq) if excel
+      scan(@sep)
+      @strip ? token.strip : token
+    elsif scan(@sep)
+      match = scan(/#{@sep}+/o)
+      match ? match.split(@sep, -1) : @es
+    else
+      scan(@eol)
+      nil
     end
-    scan(@sep)
-    @strip ? token.strip : token
   end
 
   def bomb(msg)
@@ -128,8 +136,9 @@ class Censive < StringScanner
 
   def next_row
     token = next_token or return
-    row = [token]
-    row << token while token = next_token
+    row = []
+    row.push(*token)
+    row.push(*token) while token = next_token
     row
   end
 
