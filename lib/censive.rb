@@ -53,29 +53,36 @@ class Censive < StringScanner
     reset
 
     # options
-    @drop   = drop
-    @excel  = excel
-    @mode   = mode
-    @out    = out || $stdout
-    @quote  = quote
-    @relax  = relax
-    @rowsep = rowsep
-    @sep    = sep
-    @strip  = strip
+    @drop     = drop
+    @excel    = excel
+    @mode     = mode
+    @out      = out || $stdout
+    @quote    = quote
+    @relax    = relax
+    @rowsep   = rowsep
+    @sep      = sep
+    @strip    = strip
 
     # strings
-    @cr  = "\r"
-    @lf  = "\n"
-    @es  = ""
-    @eq  = "="
-    @esc = (@quote * 2)
+    @cr       = "\r"
+    @lf       = "\n"
+    @es       = ""
+    @eq       = "="
+
+    # combinations
+    @esc      = (@quote * 2)
+    @eqq      = [@eq , @quote].join # used for parsing in excel mode
+    @seq      = [@sep, @eq   ].join # used for parsing in excel mode
 
     # regexes
-    @eol = /#{@cr}#{@lf}?|#{@lf}|\z/o             # end of line
-    @eoc = /(?=#{"\\" + @sep}|#{@cr}|#{@lf}|\z)/o # end of cell
-    @eqq = [@eq , @quote].join # used for parsing in excel mode
-    @seq = [@sep, @eq   ].join # used for parsing in excel mode
+    @eoc      = /(?=#{"\\" + @sep}|#{@cr}|#{@lf}|\z)/o # end of cell
+    @eol      = /#{@cr}#{@lf}?|#{@lf}|\z/o             # end of line
+    @escapes  = /(#{@quote})|#{"\\"+@sep}|#{@cr}|#{@lf}/o
+    @quotable = /#{"\\"+@sep}|#{@cr}|#{@lf}/o
+    @quotes   = /#{@quote}/o
+    @seps     = /#{@sep}+/o
     @unquoted = /[^#{@quote}#{@sep}#{@cr}#{@lf}][^#{@quote}#{@cr}#{@lf}]*/o
+    @zeroes   = /\A0\d*\z/
   end
 
   def reset(str=nil)
@@ -100,16 +107,16 @@ class Censive < StringScanner
     elsif scan(@quote) || (@excel && (excel = scan(@eqq))) # quoted cell
       token = ""
       while true
-        token << (scan_until(/#{@quote}/o) or bomb "unclosed quote")[0..-2]
+        token << (scan_until(@quotes) or bomb "unclosed quote")[0..-2]
         token << @quote and next if scan(@quote)
         scan(@eoc) and break
         @relax or bomb "invalid character after quote"
-        token << @quote + (scan_until(/#{@quote}/o) or bomb "bad inline quote")
+        token << @quote + (scan_until(@quotes) or bomb "bad inline quote")
       end
       scan(@sep)
       @strip ? token.strip : token
     elsif scan(@sep)
-      match = scan(/#{@sep}+/o)
+      match = scan(@seps)
       match ? match.split(@sep, -1) : @es
     else
       scan(@eol)
@@ -146,8 +153,8 @@ class Censive < StringScanner
 
   # returns 2 (must be quoted and escaped), 1 (must be quoted), 0 (neither)
   def grok(str)
-    if idx = str.index(/(#{@quote})|#{"\\"+@sep}|#{@cr}|#{@lf}/o)
-      $1 ? 2 : str.index(/#{@quote}/o, idx) ? 2 : 1
+    if idx = str.index(@escapes)
+      $1 ? 2 : str.index(@quotes, idx) ? 2 : 1
     else
       0
     end
@@ -167,11 +174,11 @@ class Censive < StringScanner
         row
       when 1
         row.map do |col|
-          col.match?(/#{"\\"+@sep}|#{@cr}|#{@lf}/o) ? "#{q}#{col}#{q}" : col
+          col.match?(@quotable) ? "#{q}#{col}#{q}" : col
         end
       else
         row.map do |col|
-          @excel && col =~ /\A0\d*\z/ ? "=#{q}#{col}#{q}" :
+          @excel && col =~ @zeroes ? "=#{q}#{col}#{q}" :
           case grok(col)
           when 0 then col
           when 1 then "#{q}#{col}#{q}"
@@ -182,7 +189,7 @@ class Censive < StringScanner
     when :full
       if @excel
         row.map do |col|
-          col =~ /\A0\d*\z/ ? "=#{q}#{col}#{q}" : "#{q}#{col.gsub(q, @esc)}#{q}"
+          col =~ @zeroes ? "=#{q}#{col}#{q}" : "#{q}#{col.gsub(q, @esc)}#{q}"
         end
       else
         row.map {|col| "#{q}#{col.gsub(q, @esc)}#{q}" }
