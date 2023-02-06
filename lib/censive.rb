@@ -16,7 +16,12 @@
 # 2. Lightweight code with streamlined and optimized logic
 # 3. Support most non-compliant CSV variations (eg - @excel, @relax, @strip)
 #
-# TODO: Support IO streaming
+# TODO:
+# 1. Support IO streaming
+# 2. Will using String#freeze speed things up?
+# 3. Review all encodings, we may be losing speed when mixing encodings
+# 4. Huge speedup possible if our @unquoted regex reads beyond @cr?@lf's
+# 5. Implement support for scan_until(string) <= right now only regex is valid
 # ============================================================================
 
 require "strscan"
