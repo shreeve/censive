@@ -156,6 +156,16 @@ class Censive < StringScanner
     row
   end
 
+  def each
+    @rows ||= parse
+    @rows.each {|row| yield row }
+  end
+
+  def export(**opts)
+    out = opts.empty? ? self : self.class.writer(**opts)
+    each {|row| out << row }
+  end
+
   # ==[ Helpers ]==
 
   # returns 2 (must be quoted and escaped), 1 (must be quoted), 0 (neither)
@@ -204,16 +214,6 @@ class Censive < StringScanner
     end.join(s)
 
     @out << out + @rowsep
-  end
-
-  def each
-    @rows ||= parse
-    @rows.each {|row| yield row }
-  end
-
-  def export(**opts)
-    out = opts.empty? ? self : self.class.writer(**opts)
-    each {|row| out << row }
   end
 
   def stats
