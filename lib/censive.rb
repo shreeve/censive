@@ -57,9 +57,6 @@ class Censive < StringScanner
     super(str)
     reset
 
-    # ensure we use the same encoding
-    @encoding = str.encoding
-
     # config options
     @drop     = drop
     @excel    = excel
@@ -91,10 +88,6 @@ class Censive < StringScanner
     @quotable = /#{"\\"+@sep}|#{@cr}|#{@lf}/o
     @quotes   = /#{@quote}/o
     @seps     = /#{@sep}+/o
-    #!# TODO: *massive* optimization if we change end to [^#{@quote}]
-    #!# TODO: we can also simplify the scan to... scan(@notquote) [ie - /^[",\r\n]/ and then do a scan_until(@quote) ]
-    #!# TODO: also, we can convert next_row() to a generator, that queue's up cells and rows and hands them off
-    #!# TODO: as needed... if a file has no quotes, this sucker will process it in ONE SWOOP!!!
     @unquoted = /[^#{@quote}#{@sep}#{@cr}#{@lf}][^#{@quote}#{@cr}#{@lf}]*/o
     @zeroes   = /\A0\d*\z/
   end
@@ -119,7 +112,7 @@ class Censive < StringScanner
       tokens = match.split(@sep, -1)
       @strip ? tokens.map!(&:strip) : tokens
     elsif scan(@quote) || (@excel && (excel = scan(@eqq))) # quoted cell
-      token = "" # @es # declare token (not used)
+      token = ""
       while true
         token << (scan_until(@quotes) or bomb "unclosed quote")[0..-2]
         token << @quote and next if scan(@quote)
