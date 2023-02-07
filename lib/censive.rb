@@ -99,7 +99,8 @@ class Censive < StringScanner
     @quotable = /#{"\\"+@sep}|#{@cr}|#{@lf}/o
     @quotes   = /#{@quote}/o
     @seps     = /#{@sep}+/o
-    @unquoted = /[^#{@quote}#{@sep}#{@cr}#{@lf}][^#{@quote}]*/o
+    @quoted   = @excel ? /(?:=)?#{@quote}/o : @quote
+    @unquoted = /[^#{@quote}#{@sep}#{@cr}#{@lf}][^#{@quote}]*/o #!# TODO: based on how we check, we could remove the @quote in the initial character class
     @leadzero = /\A0\d*\z/
 
     # parsing queue
