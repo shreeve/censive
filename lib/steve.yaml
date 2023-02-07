@@ -1,0 +1,33 @@
+loop_count: 5
+contexts:
+  - name: censive
+    prelude: |
+      $stderr.puts "prelude of censive task"
+      file = "3.csv"
+  - name: csv
+    prelude: |
+      $stderr.puts "prelude of censive task"
+      file = "data/geo-data.csv"
+prelude: |
+  require "digest/md5"
+
+  base = "/Users/shreeve/Data/Code/gems/censive/lib"
+
+  require "csv"
+  require File.join(base, "censive")
+
+  name = file
+  mode = file =~ /^ken/i ? "r:cp932" : "r"
+
+  path = File.join(base, file)
+  data = File.open(path, *mode) {|f| f.read }; nil
+
+  # $stderr.puts "\n\nFile: #{name.inspect}\nSize: #{File.stat(path).size} bytes\n\n"
+
+benchmark:
+  # csv:     rows = CSV    .parse(data); #$stderr.puts "    csv => " + Digest::MD5.hexdigest(rows.join)
+  # censive: rows = Censive.parse(data); #$stderr.puts "censive => " + Digest::MD5.hexdigest(rows.join)
+ "3.csv": $stderr.puts "Inside 3.csv" 
+ "4.csv": $stderr.puts "Inside 4.csv" 
+ "5.csv": $stderr.puts "Inside 5.csv" 
+ "6.csv": $stderr.puts "Inside 6.csv" 

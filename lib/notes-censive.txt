@@ -1,0 +1,39 @@
+STDOUT.sync = true
+
+$x = [
+  1,
+  4,
+  [5, 6, 7],
+  8,
+  ['', '', ''],
+  nil,
+  [10,11],
+  12,
+  '',
+  ['', ''],
+  nil,
+  14,
+  nil,
+  nil
+].to_enum
+
+def next_row
+  tokens = $x.next or return
+  row = [*tokens]
+  row.push(*tokens) while tokens = $x.next
+  row
+end
+
+def parse
+  @rows = []
+  while row = next_row # @row_parser.next
+p [:row, row]
+    @rows << row
+  end
+  @rows
+end
+
+p parse
+
+__END__
+

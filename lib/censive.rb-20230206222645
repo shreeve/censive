@@ -24,11 +24,13 @@
 # 5. Implement support for scan_until(string) <= right now only regex is valid
 # ============================================================================
 
+#!# TODO: *massive* optimization if we change end to [^#{@quote}]
+#!# TODO: we can also simplify the scan to... scan(@notquote) [ie - /^[",\r\n]/ and then do a scan_until(@quote) ]
+#!# TODO: as needed... if a file has no quotes, this sucker will process it in ONE SWOOP!!!
+
 require "strscan"
 
 class Censive < StringScanner
-  attr :encoding
-
   def self.parse(...)
     new(...).parse
   end
@@ -41,9 +43,9 @@ class Censive < StringScanner
     end
   end
 
-  def initialize(str=nil,
+  def initialize(str="",
     drop:     false   , # drop trailing empty fields?
-    encoding: nil     , # character encoding
+    encoding: "utf-8" , # character encoding
     excel:    false   , # literals ="01" formulas =A1 + B2 http://bit.ly/3Y7jIvc
     mode:     :compact, # export mode: compact or full
     out:      nil     , # output stream, needs to respond to <<
@@ -54,19 +56,13 @@ class Censive < StringScanner
     strip:    false   , # strip fields when reading
     **opts              # grab bag
   )
-    # initialize data source
-    if str && str.size < 100 && File.readable?(str)
-      str = File.open(str, encoding ? "r:#{encoding}" : "r").read
-    else
-      str ||= ""
-      str = str.encode(encoding) if encoding
-    end
+    # data source
+    str = File.open(str, "r:#{encoding}").read if !str[100] && File.readable?(str)
     super(str)
     reset
 
     # config options
     @drop     = drop
-    @encoding = str.encoding
     @excel    = excel
     @mode     = mode
     @out      = out || $stdout
@@ -89,18 +85,18 @@ class Censive < StringScanner
     @eqq      = [@eq , @quote].join # used for parsing in excel mode
     @seq      = [@sep, @eq   ].join # used for parsing in excel mode
 
-    # regexes
+    # regexes #!# NOTE: we could clean these up with Regexp.escape(...)
     @eoc      = /(?=#{"\\" + @sep}|#{@cr}|#{@lf}|\z)/o # end of cell
     @eol      = /#{@cr}#{@lf}?|#{@lf}/o                # end of line
     @escapes  = /(#{@quote})|#{"\\"+@sep}|#{@cr}|#{@lf}/o
+    @leadzero = /\A0\d*\z/
     @quotable = /#{"\\"+@sep}|#{@cr}|#{@lf}/o
     @quotes   = /#{@quote}/o
     @seps     = /#{@sep}+/o
     @unquoted = /[^#{@quote}#{@sep}#{@cr}#{@lf}][^#{@quote}]*/o
-    @leadzero = /\A0\d*\z/
 
-    # row parsing buffer
-    @waiting  = []
+    # # setup row parser
+    # @row_parser = row_parser
   end
 
   def reset(str=nil)
@@ -108,6 +104,54 @@ class Censive < StringScanner
     super()
     @rows = nil
     @cols = @cells = 0
+  end
+
+  # ==[ Lexer ]==
+
+  def next_tokens
+    if match = scan(@unquoted) # token for unquoted cell(s)
+      if check(@quote) && !match.chomp!(@sep) # no sep before final quote
+        if @excel && !match.chomp!(@seq) # excel mode allows sep, eq, quote
+          match << (scan_until(@eoc) or bomb "unexpected character")
+          scan(@sep)
+        end
+      end
+      match.split(@eol, -1) # array
+    elsif scan(@quote) || (@excel && (excel = scan(@eqq))) # quoted cell
+      token = ""
+      while true
+        token << (scan_until(@quotes) or bomb "unclosed quote")[0..-2]
+        token << @quote and next if scan(@quote)
+        scan(@eoc) and break
+        @relax or bomb "invalid character after quote"
+        token << @quote + (scan_until(@quotes) or bomb "bad inline quote")
+      end
+      scan(@sep)
+      @strip ? token.strip : token # string
+    elsif scan(@sep)
+      match = scan(@seps)
+      match.count(@sep) # integer
+    else
+      scan(@eol)
+      nil # nil
+    end
+  end
+
+when Array
+  match.split(@eol, -1).inject([]) do |lines, line|
+    parts = line.split(@sep, -1)
+    parts.map!(&:strip) if @strip
+    lines.push(nil, parts)
+  end[1..].flatten
+when String
+  one value
+when Integer
+  match ? match.split(@sep, -1) : @es
+else # nil
+end
+
+  def bomb(msg)
+    abort "\n#{File.basename($0)}: #{msg} at character #{pos} near '#{string[pos-4,7]}'"
   end
 
   # ==[ Parser ]==
@@ -123,54 +167,54 @@ class Censive < StringScanner
     @rows
   end
 
+  #!# TODO: remove this and go to all @row_parser...
   def next_row
-    while true
-      p list = next_parse or break
+    tokens = next_tokens or return
+    # p [:tokens1, tokens]
+    row = [*tokens]
+    # p [:row1, row]
+    # row.push(*tokens)
+    # row.push(*tokens) while tokens = next_tokens
+    while tokens = next_tokens
+      # p [:tokens2, tokens]
+      row.push(*tokens)
+      # p [:row2, row]
     end
-
-
-    # token = next_parse or return
-    # row = []
-    # row.push(*token)
-    # row.push(*token) while token = next_parse
-    # row
+    p [:row3, row]
+    row
   end
 
-  def next_parse
-    if match = scan(@unquoted) # unquoted cell(s)
-      if check(@quote) && !match.chomp!(@sep) && !match.end_with?(@cr, @lf)
-        if @excel && !match.chomp!(@seq) # excel mode allows sep, eq, quote
-          match << (scan_until(@eoc) or bomb "unexpected character")
-          scan(@sep)
-        end
-      end
-      match.split(@eol, -1).map! do |line|
-        if line.empty?
-          nil
-        else
-          cells = line.split(@sep, -1)
-          @strip ? cells.map!(&:strip) : cells
-        end
-      end
-    elsif scan(@quote) || (@excel && (excel = scan(@eqq))) # quoted cell
-      token = ""
-      while true
-        token << (scan_until(@quotes) or bomb "unclosed quote")[0..-2]
-        token << @quote and next if scan(@quote)
-        scan(@eoc) and break
-        @relax or bomb "invalid character after quote"
-        token << @quote + (scan_until(@quotes) or bomb "bad inline quote")
-      end
-      scan(@sep)
-      @strip ? token.strip : token
-    elsif scan(@sep)
-      match = scan(@seps)
-      match ? match.split(@sep, -1) : @es
-    else
-      scan(@eol)
-      nil
-    end
-  end
+# [:row1, [["Name"]]]
+# [:row2, [["Name"], "Age"]]
+# [:row2, [["Name"], "Age", "", "", ""]]
+# [:row2, [["Name"], "Age", "", "", "", ["Shoe"], nil, ["Alice", "27", "5"], nil, ["Bob", "33", "11"], nil, ["Charlie or \"Chuck\""]]]
+# [:row2, [["Name"], "Age", "", "", "", ["Shoe"], nil, ["Alice", "27", "5"], nil, ["Bob", "33", "11"], nil, ["Charlie or \"Chuck\""], ["=B2 + B3", "9"], nil, ["\"Doug E Fresh\""]]]
+# [:row2, [["Name"], "Age", "", "", "", ["Shoe"], nil, ["Alice", "27", "5"], nil, ["Bob", "33", "11"], nil, ["Charlie or \"Chuck\""], ["=B2 + B3", "9"], nil, ["\"Doug E Fresh\""], ["=\"007\""]]]
+# [:row2, [["Name"], "Age", "", "", "", ["Shoe"], nil, ["Alice", "27", "5"], nil, ["Bob", "33", "11"], nil, ["Charlie or \"Chuck\""], ["=B2 + B3", "9"], nil, ["\"Doug E Fresh\""], ["=\"007\""], ["10"], nil, ["Subtotal", "=sum(B2:B5)"]]]
+# [:row2, [["Name"], "Age", "", "", "", ["Shoe"], nil, ["Alice", "27", "5"], nil, ["Bob", "33", "11"], nil, ["Charlie or \"Chuck\""], ["=B2 + B3", "9"], nil, ["\"Doug E Fresh\""], ["=\"007\""], ["10"], nil, ["Subtotal", "=sum(B2:B5)"], "01234"]]
+# [:row3, [["Name"], "Age", "", "", "", ["Shoe"], nil, ["Alice", "27", "5"], nil, ["Bob", "33", "11"], nil, ["Charlie or \"Chuck\""], ["=B2 + B3", "9"], nil, ["\"Doug E Fresh\""], ["=\"007\""], ["10"], nil, ["Subtotal", "=sum(B2:B5)"], "01234"]]
+
+#   #!# TODO: remove this and go to all @row_parser...
+#   def next_row
+#     token = next_tokens or return
+#     row = []
+#     row.push(*token)
+#     row.push(*token) while token = next_tokens
+#     row
+#   end
+#
+  # def row_parser
+  #   Enumerator.new do |yielder|
+  #     tokens = nil
+  #     loop do
+  #       tokens = next_tokens or yielder.yield # signals eof
+  #       row = [tokens]
+  #       row.push(tokens) while tokens = next_tokens
+  #       p [:row, row]
+  #       yielder.yield row
+  #     end
+  #   end
+  # end
 
   def each
     @rows ||= parse
@@ -239,31 +283,30 @@ class Censive < StringScanner
     puts "%#{wide}d cells"   % @cells
     puts "%#{wide}d bytes"   % string.size
   end
-
-  def bomb(msg)
-    abort "\n#{File.basename($0)}: #{msg} at character #{pos} near '#{string[pos-4,7]}'"
-  end
 end
 
 if __FILE__ == $0
   raw = DATA.gets("\n\n").chomp
 # raw = File.read(ARGV.first || "lc-2023.csv")
   csv = Censive.new(raw, excel: true, relax: true)
-  csv.export(excel: true, sep: "|")
+  csv.export(excel: true) # , sep: "|")
 end
 
 __END__
-Name,Age,,,Shoe,,,
-"Alice",27,5
-Bob,33,10 1/2
+Name,"Age",,,,Shoe
+Alice,27,5
+Bob,33,11
 Charlie or "Chuck",=B2 + B3,9
 "Doug E Fresh",="007",10
-Subtotal,=sum(B2:B5),="01234"
-
+Subtotal,=sum(B2:B5),="01234",Fun
 A,B,C,D
 A,B,"C",D
 A,B,C",D
 A,B,"C",D
+123,"CHO, JOELLE "JOJO"",456
+123,"CHO, JOELLE ""JOJO""",456
+=,=x,x=,="x",="","","=",123,0123,="123",="0123"
+,=x,x=,x,,,,,,=,,123,="0123",123,,="0123"
 
 # first line works in "relax" mode, bottom line is compliant
 123,"CHO, JOELLE "JOJO"",456
