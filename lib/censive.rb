@@ -107,11 +107,14 @@ class Censive < StringScanner
   end
 
   def reset(str=nil)
-    self.string = str if str
-    super()
     @rows = nil
     @cols = @cells = 0
     @queue.clear
+
+    #!# TODO: reset all encodings?
+    self.string = str if str
+    @encoding = str.encoding
+    super()
   end
 
   # ==[ Parser ]==
