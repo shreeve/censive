@@ -53,7 +53,7 @@ class Censive < StringScanner
     **opts              # grab bag
   )
     # initialize data source
-    if str&.size < 100 && File.readable?(str)
+    if str && str.size < 100 && File.readable?(str)
       str = File.open(str, encoding ? "r:#{encoding}" : "r").read
     else
       str ||= ""
