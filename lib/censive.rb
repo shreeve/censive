@@ -109,11 +109,11 @@ class Censive < StringScanner
   def reset(str=nil)
     @rows = nil
     @cols = @cells = 0
-    @queue.clear
+    @queue&.clear
 
     #!# TODO: reset all encodings?
     self.string = str if str
-    @encoding = str.encoding
+    @encoding = string.encoding
     super()
   end
 
@@ -134,7 +134,6 @@ class Censive < StringScanner
     while true
       p list = next_parse or break
     end
-
 
     # token = next_parse or return
     # row = []
