@@ -133,7 +133,7 @@ class Censive < StringScanner
 
   def next_row
     while true
-      p list = next_parse or break
+      p list = next_parse
     end
 
     # token = next_parse or return
