@@ -95,7 +95,7 @@ class Censive < StringScanner
     @quotes   = /#{@quote}/o
     @seps     = /#{@sep}+/o
     @unquoted = /[^#{@quote}#{@sep}#{@cr}#{@lf}][^#{@quote}#{@cr}#{@lf}]*/o
-    @zeroes   = /\A0\d*\z/
+    @leadzero = /\A0\d*\z/
 
     # setup row parser
     @row_parser = row_parser
@@ -218,7 +218,7 @@ class Censive < StringScanner
         end
       else
         row.map do |col|
-          @excel && col =~ @zeroes ? "=#{q}#{col}#{q}" :
+          @excel && col =~ @leadzero ? "=#{q}#{col}#{q}" :
           case grok(col)
           when 0 then col
           when 1 then "#{q}#{col}#{q}"
@@ -229,7 +229,7 @@ class Censive < StringScanner
     when :full
       if @excel
         row.map do |col|
-          col =~ @zeroes ? "=#{q}#{col}#{q}" : "#{q}#{col.gsub(q, @esc)}#{q}"
+          col =~ @leadzero ? "=#{q}#{col}#{q}" : "#{q}#{col.gsub(q, @esc)}#{q}"
         end
       else
         row.map {|col| "#{q}#{col.gsub(q, @esc)}#{q}" }
