@@ -99,8 +99,8 @@ class Censive < StringScanner
     @unquoted = /[^#{@quote}#{@sep}#{@cr}#{@lf}][^#{@quote}]*/o
     @leadzero = /\A0\d*\z/
 
-    # row parsing buffer
-    @waiting  = []
+    # parsing queue
+    @queue    = []
   end
 
   def reset(str=nil)
@@ -108,6 +108,7 @@ class Censive < StringScanner
     super()
     @rows = nil
     @cols = @cells = 0
+    @queue.clear
   end
 
   # ==[ Parser ]==
