@@ -260,11 +260,11 @@ if __FILE__ == $0
 end
 
 __END__
+"Don",="007",10,"Ed"
 Name,Age,,,Shoe,,,
 "Alice",27,5
 Bob,33,10 1/2
 Charlie or "Chuck",=B2 + B3,9
-"Doug E Fresh",="007",10
 Subtotal,=sum(B2:B5),="01234"
 
 A,B,C,D
