@@ -144,7 +144,19 @@ class Censive < StringScanner
   end
 
   def next_parse
-    if match = scan(@unquoted) # unquoted cell(s)
+    if scan(@quoted) # quoted cell
+      token = ""
+      while true
+        token << (scan_until(@quotes) or bomb "unclosed quote")[0..-2]
+        token << @quote and next if scan(@quote)
+        scan(@eoc) and break
+        @relax or bomb "invalid character after quote"
+        token << @quote + (scan_until(@quotes) or bomb "bad inline quote")
+      end
+      scan(@sep)
+      @strip ? token.strip : token
+    elsif match = scan(@unquoted) # unquoted cell(s)
+      # if we see a quote in an invalid location, try to make sense of it
       if check(@quote) && !match.chomp!(@sep) && !match.end_with?(@cr, @lf)
         unless @excel && match.chomp!(@seq) # excel allows sep, eq, quote
           match << (scan_until(@eoc) or bomb "unexpected character")
@@ -159,17 +171,6 @@ class Censive < StringScanner
           @strip ? cells.map!(&:strip) : cells
         end
       end
-    elsif scan(@quote) || (@excel && (excel = scan(@eqq))) # quoted cell
-      token = ""
-      while true
-        token << (scan_until(@quotes) or bomb "unclosed quote")[0..-2]
-        token << @quote and next if scan(@quote)
-        scan(@eoc) and break
-        @relax or bomb "invalid character after quote"
-        token << @quote + (scan_until(@quotes) or bomb "bad inline quote")
-      end
-      scan(@sep)
-      @strip ? token.strip : token
     elsif scan(@sep)
       match = scan(@seps)
       match ? match.split(@sep, -1) : @es
