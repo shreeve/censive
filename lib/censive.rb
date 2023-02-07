@@ -140,7 +140,7 @@ class Censive < StringScanner
   def next_parse
     if match = scan(@unquoted) # unquoted cell(s)
       if check(@quote) && !match.chomp!(@sep) && !match.end_with?(@cr, @lf)
-        if @excel && !match.chomp!(@seq) # excel mode allows sep, eq, quote
+        if !@excel || match.chomp!(@seq) # excel mode allows sep, eq, quote
           match << (scan_until(@eoc) or bomb "unexpected character")
           scan(@sep)
         end
