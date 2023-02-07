@@ -39,9 +39,9 @@ class Censive < StringScanner
     end
   end
 
-  def initialize(str="",
+  def initialize(str=nil,
     drop:     false   , # drop trailing empty fields?
-    encoding: "utf-8" , # character encoding
+    encoding: nil     , # character encoding
     excel:    false   , # literals ="01" formulas =A1 + B2 http://bit.ly/3Y7jIvc
     mode:     :compact, # export mode: compact or full
     out:      nil     , # output stream, needs to respond to <<
@@ -52,13 +52,19 @@ class Censive < StringScanner
     strip:    false   , # strip fields when reading
     **opts              # grab bag
   )
-    # data source
-    str = File.open(str, "r:#{encoding}").read if !str[100] && File.readable?(str)
+    # initialize data source
+    if str&.size < 100 && File.readable?(str)
+      str = File.open(str, encoding ? "r:#{encoding}" : "r").read
+    else
+      str ||= ""
+      str = str.encode(encoding) if encoding
+    end
     super(str)
     reset
 
     # config options
     @drop     = drop
+    @encoding = str.encoding
     @excel    = excel
     @mode     = mode
     @out      = out || $stdout
