@@ -89,6 +89,9 @@ class Censive < StringScanner
     @eqq      = [@eq , @quote].join # used for parsing in excel mode
     @seq      = [@sep, @eq   ].join # used for parsing in excel mode
 
+    #!# TODO: come up with a clean way to escape/encode all this
+    #!# TODO: maybe define @tokens = "#{@quote}#{@sep}#{@cr}#{@lf}", etc.
+
     # regexes
     @eoc      = /(?=#{"\\" + @sep}|#{@cr}|#{@lf}|\z)/o # end of cell
     @eol      = /#{@cr}#{@lf}?|#{@lf}/o                # end of line
