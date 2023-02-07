@@ -158,7 +158,6 @@ class Censive < StringScanner
     @rows
   end
 
-  #!# TODO: remove this and go to all @row_parser...
   def next_row
     token = next_token or return
     row = []
