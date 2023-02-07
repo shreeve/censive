@@ -143,12 +143,22 @@ class Censive < StringScanner
   def parse
     @rows = []
     while row = @row_parser.next
+    # while row = next_row
       @rows << row
       count = row.size
       @cols = count if count > @cols
       @cells += count
     end
     @rows
+  end
+
+  #!# TODO: remove this and go to all @row_parser...
+  def next_row
+    token = next_token or return
+    row = []
+    row.push(*token)
+    row.push(*token) while token = next_token
+    row
   end
 
   def row_parser
