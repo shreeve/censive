@@ -27,6 +27,8 @@
 require "strscan"
 
 class Censive < StringScanner
+  attr :encoding
+
   def self.parse(...)
     new(...).parse
   end
