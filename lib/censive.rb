@@ -4,7 +4,7 @@
 # censive - A quick and lightweight CSV handling library for Ruby
 #
 # Author: Steve Shreeve (steve.shreeve@gmail.com)
-#   Date: Feb 7, 2023
+#   Date: Feb 8, 2023
 #
 # https://crystal-lang.org/api/1.7.2/CSV.html (Crystal's CSV library)
 # https://github.com/ruby/strscan/blob/master/ext/strscan/strscan.c
@@ -86,8 +86,7 @@ class Censive < StringScanner
 
     # combinations
     @esc      = (@quote * 2)
-    @eqq      = [@eq , @quote].join # used for parsing in excel mode
-    @seq      = [@sep, @eq   ].join # used for parsing in excel mode
+    @seq      = [@sep, @eq].join # used for parsing in excel mode
 
     #!# TODO: come up with a clean way to escape/encode all this
     #!# TODO: maybe define @tokens = "#{@quote}#{@sep}#{@cr}#{@lf}", etc.
@@ -100,7 +99,7 @@ class Censive < StringScanner
     @quotes   = /#{@quote}/o
     @seps     = /#{@sep}+/o
     @quoted   = @excel ? /(?:=)?#{@quote}/o : @quote
-    @unquoted = /[^#{@quote}#{@sep}#{@cr}#{@lf}][^#{@quote}]*/o #!# TODO: based on how we check, we could remove the @quote in the initial character class
+    @unquoted = /[^#{@sep}#{@cr}#{@lf}][^#{@quote}#{@cr}#{@lf}]*/o
     @leadzero = /\A0\d*\z/
   end
 
@@ -117,7 +116,7 @@ class Censive < StringScanner
   # ==[ Parser ]==
 
   def parse
-    @rows = [[]]
+    @rows = []
     while row = next_row
       @rows << row
       count = row.size
@@ -128,16 +127,14 @@ class Censive < StringScanner
   end
 
   def next_row
-    p [:STARTING, next_parse]
-    # @rows.push([])
-    while true
-      p [:next, x = next_parse, @rows]
-      break if !x
-      # p @rows
-    end
+    token = next_token or return
+    row = []
+    row.push(*token)
+    row.push(*token) while token = next_token
+    row
   end
 
-  def next_parse
+  def next_token
     if scan(@quoted) # quoted cell
       token = ""
       while true
@@ -148,27 +145,23 @@ class Censive < StringScanner
         token << @quote + (scan_until(@quotes) or bomb "bad inline quote")
       end
       scan(@sep)
-      @rows.last.push(@strip ? token.strip : token)
+      @strip ? token.strip : token
     elsif match = scan(@unquoted) # unquoted cell(s)
-      if check(@quote) && !match.chomp!(@sep) && !match.end_with?(@cr, @lf)
-        unless @excel && match.chomp!(@seq) # excel allows sep, eq, quote
-          match << (scan_until(@eoc) or bomb "unexpected character")
+      if check(@quote) && !match.chomp!(@sep) # if we see a stray quote
+        unless @excel && match.chomp!(@seq) # unless an excel literal, fix it
+          match << (scan_until(@eoc) or bomb "stray quote")
           scan(@sep)
         end
       end
-      list = match.split(@eol, -1).map!.with_index do |line, i|
-        @rows.push([]) if i > 0
-        cells = line.split(@sep, -1)
-        @rows.last.concat(@strip ? cells.map!(&:strip) : cells)
-      end
+      tokens = match.split(@sep, -1)
+      @strip ? tokens.map!(&:strip) : tokens
     elsif scan(@sep)
       match = scan(@seps)
-      @rows.last.push(match ? match.split(@sep, -1) : @es)
+      match ? match.split(@sep, -1) : @es
     else
       scan(@eol)
-      return nil
+      nil
     end
-    true
   end
 
   def each
@@ -248,7 +241,7 @@ if __FILE__ == $0
   raw = DATA.gets("\n\n").chomp
 # raw = File.read(ARGV.first || "lc-2023.csv")
   csv = Censive.new(raw, excel: true, relax: true)
-  csv.export(excel: true, sep: "|")
+  csv.export # (excel: true) # sep: "|")
 end
 
 __END__
