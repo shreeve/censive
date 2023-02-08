@@ -104,13 +104,13 @@ class Censive < StringScanner
     @leadzero = /\A0\d*\z/
 
     # parsing queue
-    @queue    = []
+    @hold    = [[]]
   end
 
   def reset(str=nil)
     @rows = nil
     @cols = @cells = 0
-    @queue&.clear
+    @hold&.clear&.push([])
 
     #!# TODO: reset all encodings?
     self.string = str if str
@@ -133,14 +133,18 @@ class Censive < StringScanner
 
   def next_row
     while true
-      p list = next_parse or break
+      case item = next_parse
+      when Array
+        p [:array, @hold.first, item]
+        @hold.first.push(*item.shift)
+      when String
+        p [:strng, @hold.first, item]
+        @hold.first.push(item)
+      when nil
+        p [:nilll, @hold.first, []]
+        return @hold.shift
+      end
     end
-
-    # token = next_parse or return
-    # row = []
-    # row.push(*token)
-    # row.push(*token) while token = next_parse
-    # row
   end
 
   def next_parse
@@ -156,7 +160,6 @@ class Censive < StringScanner
       scan(@sep)
       @strip ? token.strip : token
     elsif match = scan(@unquoted) # unquoted cell(s)
-      # if we see a quote in an invalid location, try to make sense of it
       if check(@quote) && !match.chomp!(@sep) && !match.end_with?(@cr, @lf)
         unless @excel && match.chomp!(@seq) # excel allows sep, eq, quote
           match << (scan_until(@eoc) or bomb "unexpected character")
