@@ -102,15 +102,11 @@ class Censive < StringScanner
     @quoted   = @excel ? /(?:=)?#{@quote}/o : @quote
     @unquoted = /[^#{@quote}#{@sep}#{@cr}#{@lf}][^#{@quote}]*/o #!# TODO: based on how we check, we could remove the @quote in the initial character class
     @leadzero = /\A0\d*\z/
-
-    # parsing queue
-    @hold    = [[]]
   end
 
   def reset(str=nil)
     @rows = nil
     @cols = @cells = 0
-    @hold&.clear&.push([])
 
     #!# TODO: reset all encodings?
     self.string = str if str
@@ -121,7 +117,7 @@ class Censive < StringScanner
   # ==[ Parser ]==
 
   def parse
-    @rows = []
+    @rows = [[]]
     while row = next_row
       @rows << row
       count = row.size
@@ -132,18 +128,12 @@ class Censive < StringScanner
   end
 
   def next_row
+    p [:STARTING, next_parse]
+    # @rows.push([])
     while true
-      case item = next_parse
-      when Array
-        p [:array, @hold.first, item]
-        @hold.first.push(*item.shift)
-      when String
-        p [:strng, @hold.first, item]
-        @hold.first.push(item)
-      when nil
-        p [:nilll, @hold.first, []]
-        return @hold.shift
-      end
+      p [:next, x = next_parse, @rows]
+      break if !x
+      # p @rows
     end
   end
 
@@ -158,7 +148,7 @@ class Censive < StringScanner
         token << @quote + (scan_until(@quotes) or bomb "bad inline quote")
       end
       scan(@sep)
-      @strip ? token.strip : token
+      @rows.last.push(@strip ? token.strip : token)
     elsif match = scan(@unquoted) # unquoted cell(s)
       if check(@quote) && !match.chomp!(@sep) && !match.end_with?(@cr, @lf)
         unless @excel && match.chomp!(@seq) # excel allows sep, eq, quote
@@ -166,21 +156,19 @@ class Censive < StringScanner
           scan(@sep)
         end
       end
-      match.split(@eol, -1).map! do |line|
-        if line.empty?
-          nil
-        else
-          cells = line.split(@sep, -1)
-          @strip ? cells.map!(&:strip) : cells
-        end
+      list = match.split(@eol, -1).map!.with_index do |line, i|
+        @rows.push([]) if i > 0
+        cells = line.split(@sep, -1)
+        @rows.last.concat(@strip ? cells.map!(&:strip) : cells)
       end
     elsif scan(@sep)
       match = scan(@seps)
-      match ? match.split(@sep, -1) : @es
+      @rows.last.push(match ? match.split(@sep, -1) : @es)
     else
       scan(@eol)
-      nil
+      return nil
     end
+    true
   end
 
   def each
