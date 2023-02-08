@@ -3,13 +3,8 @@
 require "csv"
 require "digest/md5"
 
-if ARGV.empty?
-  path = "KEN_ALL.CSV"
-  mode = "r:cp932"
-else
-  path = ARGV.shift || "5.csv"
-  mode = "r"
-end
+path = ARGV[0] || "KEN_ALL.CSV"
+mode = path =~ /^ken/i ? "r:cp932" : "r"
 
 data = File.open(path, mode).read
 rows = CSV.parse(data)
