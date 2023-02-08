@@ -14,4 +14,4 @@ end
 data = File.open(path, mode).read
 rows = Censive.parse(data)
 
-puts Digest::MD5.hexdigest(rows.join)
+puts "%s %s (%d size)" % [Digest::MD5.hexdigest(rows.join), path, File.stat(path).size], ""
