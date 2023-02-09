@@ -4,7 +4,7 @@ require "csv"
 require "digest/md5"
 
 path = ARGV[0] || "KEN_ALL.CSV"
-mode = path =~ /^ken/i ? "r:cp932:us-ascii" : "r"
+mode = path =~ /^ken/i ? "r:cp932" : "r"
 
 data = File.open(path, mode).read
 rows = CSV.parse(data)
