@@ -1,0 +1,60 @@
+digraph finite_state_machine {
+  fontname="Helvetica,Arial,sans-serif"
+  node [fontname="Helvetica,Arial,sans-serif"]
+  edge [fontname="Helvetica,Arial,sans-serif"]
+  rankdir=LR;
+  node [shape = circle, style=filled, fillcolor="#dddddd"];
+
+  2  [label="2: StartRecord"];
+  3  [label="3: InComment"];
+  4  [label="4: StartField", shape=doublecircle, fillcolor="#ffdddd"];
+  8  [label="8: InField"];
+  5  [label="5: InQuotedField"];
+  6  [label="6: EndFieldDelim"];
+  7  [label="7: EndFieldTerm", shape=doublecircle, fillcolor="#ffdddd"];
+  9  [label="9: InRecordTerm", shape=doublecircle, fillcolor="#ffdddd"];
+  11 [label="11: InEscapedQuote"];
+  10 [label="10: InDoubleEscapedQuote"];
+  12 [label="12: CRLF"];
+  13 [label="13: EndRecord"];
+
+  2  -> 2  [label="term / discard"];
+  2  -> 3  [label="comment / discard"];
+  2  -> 4  [label="* / ε"];
+
+  3  -> 2  [label="LF / discard"];
+  3  -> 3  [label="* / ε"];
+
+  4  -> 5  [label="quote & @quoting / discard"];
+  4  -> 6  [label="delim / discard"];
+  4  -> 7  [label="term / ε"]
+  4  -> 8  [label="* / copyout"];
+
+  5  -> 5  [label="* / copyout"];
+  5  -> 10 [label="quote & @quoting / discard"];
+  5  -> 11 [label="esc & @quoting / discard"];
+
+  6  -> 4  [label="* / ε"];
+
+  7  -> 9  [label="* / ε"];
+
+  8  -> 6  [label="delim / discard"];
+  8  -> 7  [label="term / ε"]
+  8  -> 8  [label="* / copyout"];
+
+  9  -> 12 [label="CR & @isCRLF / copyout"];
+  9  -> 13 [label="* / discard"];
+
+  10 -> 5  [label="quote & @quoting & @double-quote / copyout"];
+  10 -> 6  [label="delim / discard"];
+  10 -> 7  [label="term / ε"]
+  10 -> 8  [label="* / copyout"];
+
+  11 -> 5  [label="* / copyout"];
+
+  12 -> 2  [label="* / ε"];
+  12 -> 2  [label="LF / discard"];
+
+  13 -> 2  [label="* / ε"];
+
+}
