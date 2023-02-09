@@ -5,56 +5,55 @@ digraph finite_state_machine {
   rankdir=LR;
   node [shape = circle, style=filled, fillcolor="#dddddd"];
 
-  2  [label="2: StartRow"];
-  3  [label="3: InComment"];
-  4  [label="4: StartColumn", shape=doublecircle, fillcolor="#ffdddd"];
-  8  [label="8: InColumn"];
+  1  [label="1: StartRow"];
+  2  [label="2: InComment"];
+  3  [label="3: StartColumn", shape=doublecircle, fillcolor="#ffdddd"];
+  4  [label="4: InColumn"];
   5  [label="5: InQuotedColumn"];
-  • [label="•: InEscapedQuote"];
-  10 [label="10: InDoubleEscapedQuote"];
-  6  [label="6: EndColumnSeparator"];
-  7  [label="7: EndColumnRow", shape=doublecircle, fillcolor="#ffdddd"];
-  11 [label="11: InRowEnd", shape=doublecircle, fillcolor="#ffdddd"];
-  12 [label="12: CRLF"];
-  13 [label="13: EndRow"];
+  6  [label="6: InEscapedQuote"];
+  7  [label="7: InDoubleEscapedQuote"];
+  8  [label="8: EndColumnSeparator"];
+  9  [label="9: EndColumnRow", shape=doublecircle, fillcolor="#ffdddd"];
+  10 [label="10: InRowEnd", shape=doublecircle, fillcolor="#ffdddd"];
+  11 [label="11: CRLF"];
+  12 [label="12: EndRow"];
 
-  2  -> 2  [label="term / discard"];
-  2  -> 3  [label="comment / discard"];
-  2  -> 4  [label="* / ε"];
+  1  -> 1  [label="term / discard"];
+  1  -> 2  [label="comment / discard"];
+  1  -> 3  [label="* / ε"];
 
-  3  -> 2  [label="LF / discard"];
-  3  -> 3  [label="* / discard"];
+  2  -> 1  [label="LF / discard"];
+  2  -> 2  [label="* / discard"];
 
-  4  -> 5  [label="quote & @quoting / discard"];
-  4  -> 6  [label="sep / discard"];
-  4  -> 7  [label="term / ε"]
-  4  -> 8  [label="* / copyout"];
+  3  -> 4  [label="* / copyout"];
+  3  -> 5  [label="quote & @quoting / discard"];
+  3  -> 8  [label="sep / discard"];
+  3  -> 9  [label="term / ε"]
+
+  4  -> 4  [label="* / copyout"];
+  4  -> 8  [label="sep / discard"];
+  4  -> 9  [label="term / ε"]
 
   5  -> 5  [label="* / copyout"];
-  5  -> 10 [label="quote & @quoting / discard"];
-  5  -> •  [label="esc & @quoting / discard"];
+  5  -> 6  [label="esc & @quoting / discard"];
+  5  -> 7  [label="quote & @quoting / discard"];
 
-  6  -> 4  [label="* / ε"];
+  6  -> 5  [label="* / copyout"];
 
-  7  -> 11 [label="* / ε"];
+  7  -> 4  [label="* / copyout"];
+  7  -> 5  [label="quote & @quoting & @double-quote / copyout"];
+  7  -> 8  [label="sep / discard"];
+  7  -> 9  [label="term / ε"]
 
-  8  -> 6  [label="sep / discard"];
-  8  -> 7  [label="term / ε"]
-  8  -> 8  [label="* / copyout"];
+  8  -> 3  [label="* / ε"];
 
-  11 -> 12 [label="CR & @isCRLF / discard"];
-  11 -> 13 [label="* / discard"];
+  9  -> 10 [label="* / ε"];
 
-  10 -> 5  [label="quote & @quoting & @double-quote / copyout"];
-  10 -> 6  [label="sep / discard"];
-  10 -> 7  [label="term / ε"]
-  10 -> 8  [label="* / copyout"];
+  10 -> 11 [label="CR & @isCRLF / discard"];
+  10 -> 12 [label="* / discard"];
 
-  •  -> 5  [label="* / copyout"];
+  11 -> 1  [label="* / ε"];
+  11 -> 1  [label="LF / discard"];
 
-  12 -> 2  [label="* / ε"];
-  12 -> 2  [label="LF / discard"];
-
-  13 -> 2  [label="* / ε"];
-
+  12 -> 1  [label="* / ε"];
 }
