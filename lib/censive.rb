@@ -65,6 +65,7 @@ class Censive < StringScanner
     reset
 
     # config options
+    @cheat    = true
     @drop     = drop
     @encoding = str.encoding
     @excel    = excel
@@ -127,6 +128,18 @@ class Censive < StringScanner
   end
 
   def next_row
+    if @cheat and line = scan_until(@eol)
+      row = line.chomp!.split(@sep, -1)
+      row.each do |col|
+        next if (saw = col.count(@quote)).zero?
+        next if (saw == 2) && col.delete_prefix!(@quote) && col.delete_suffix!(@quote)
+        @cheat = false
+        break
+      end if line.include?(@quote)
+      @cheat and return @strip ? row.each(&:strip!) : row
+      unscan
+    end
+
     token = next_token or return
     row = []
     row.push(*token)
