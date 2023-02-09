@@ -23,7 +23,7 @@ digraph finite_state_machine {
   2  -> 4  [label="* / ε"];
 
   3  -> 2  [label="LF / discard"];
-  3  -> 3  [label="* / ε"];
+  3  -> 3  [label="* / discard"];
 
   4  -> 5  [label="quote & @quoting / discard"];
   4  -> 6  [label="delim / discard"];
@@ -42,7 +42,7 @@ digraph finite_state_machine {
   8  -> 7  [label="term / ε"]
   8  -> 8  [label="* / copyout"];
 
-  9  -> 12 [label="CR & @isCRLF / copyout"];
+  9  -> 12 [label="CR & @isCRLF / discard"];
   9  -> 13 [label="* / discard"];
 
   10 -> 5  [label="quote & @quoting & @double-quote / copyout"];
