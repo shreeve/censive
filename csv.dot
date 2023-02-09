@@ -5,18 +5,18 @@ digraph finite_state_machine {
   rankdir=LR;
   node [shape = circle, style=filled, fillcolor="#dddddd"];
 
-  2  [label="2: StartRecord"];
+  2  [label="2: StartRow"];
   3  [label="3: InComment"];
-  4  [label="4: StartField", shape=doublecircle, fillcolor="#ffdddd"];
-  8  [label="8: InField"];
-  5  [label="5: InQuotedField"];
-  6  [label="6: EndFieldDelim"];
-  7  [label="7: EndFieldTerm", shape=doublecircle, fillcolor="#ffdddd"];
-  9  [label="9: InRecordTerm", shape=doublecircle, fillcolor="#ffdddd"];
+  4  [label="4: StartColumn", shape=doublecircle, fillcolor="#ffdddd"];
+  8  [label="8: InColumn"];
+  5  [label="5: InQuotedColumn"];
   11 [label="11: InEscapedQuote"];
   10 [label="10: InDoubleEscapedQuote"];
+  6  [label="6: EndColumnSeparator"];
+  7  [label="7: EndColumnRow", shape=doublecircle, fillcolor="#ffdddd"];
+  9  [label="9: InRowEnd", shape=doublecircle, fillcolor="#ffdddd"];
   12 [label="12: CRLF"];
-  13 [label="13: EndRecord"];
+  13 [label="13: EndRow"];
 
   2  -> 2  [label="term / discard"];
   2  -> 3  [label="comment / discard"];
