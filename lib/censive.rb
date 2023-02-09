@@ -42,7 +42,7 @@ class Censive < StringScanner
   end
 
   def initialize(str=nil,
-    drop:     false   , # drop trailing empty fields?
+    drop:     false   , # drop trailing empty columns?
     encoding: nil     , # character encoding
     excel:    false   , # literals ="01" formulas =A1 + B2 http://bit.ly/3Y7jIvc
     mode:     :compact, # export mode: compact or full
@@ -51,7 +51,7 @@ class Censive < StringScanner
     relax:    false   , # relax quote parsing so ,"Fo"o, => ,"Fo""o",
     rowsep:   "\n"    , # row separator for export
     sep:      ","     , # column separator character
-    strip:    false   , # strip fields when reading
+    strip:    false   , # strip columns when reading
     **opts              # grab bag
   )
     # initialize data source
