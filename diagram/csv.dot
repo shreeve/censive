@@ -1,9 +1,7 @@
 digraph finite_state_machine {
-  fontname="Helvetica,Arial,sans-serif"
-  node [fontname="Helvetica,Arial,sans-serif"]
-  edge [fontname="Helvetica,Arial,sans-serif"]
   rankdir=LR;
-  node [shape = circle, style=filled, fillcolor="#dddddd"];
+  node [fontname="Helvetica,Arial,sans-serif", shape=circle, style=filled, fillcolor="#dddddd"];
+  edge [fontname="Helvetica,Arial,sans-serif"]
 
   1  [label="1: StartRow"];
   2  [label="2: InComment"];
