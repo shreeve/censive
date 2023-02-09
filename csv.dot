@@ -26,7 +26,7 @@ digraph finite_state_machine {
   3  -> 3  [label="* / discard"];
 
   4  -> 5  [label="quote & @quoting / discard"];
-  4  -> 6  [label="delim / discard"];
+  4  -> 6  [label="sep / discard"];
   4  -> 7  [label="term / ε"]
   4  -> 8  [label="* / copyout"];
 
@@ -38,7 +38,7 @@ digraph finite_state_machine {
 
   7  -> 9  [label="* / ε"];
 
-  8  -> 6  [label="delim / discard"];
+  8  -> 6  [label="sep / discard"];
   8  -> 7  [label="term / ε"]
   8  -> 8  [label="* / copyout"];
 
@@ -46,7 +46,7 @@ digraph finite_state_machine {
   9  -> 13 [label="* / discard"];
 
   10 -> 5  [label="quote & @quoting & @double-quote / copyout"];
-  10 -> 6  [label="delim / discard"];
+  10 -> 6  [label="sep / discard"];
   10 -> 7  [label="term / ε"]
   10 -> 8  [label="* / copyout"];
 
