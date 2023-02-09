@@ -14,7 +14,8 @@
 # GOALS:
 # 1. Faster than Ruby's default CSV library
 # 2. Lightweight code with streamlined and optimized logic
-# 3. Support most non-compliant CSV variations (eg - @excel, @relax, @strip)
+# 3. Support most non-compliant CSV variations (@excel, @relax, etc)
+# 4. Support most commonly used CSV options (@sep, @quote, @strip, @drop, etc)
 #
 # TODO:
 # 1. Support IO streaming
