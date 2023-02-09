@@ -99,7 +99,7 @@ class Censive < StringScanner
     @quotes   = /#{@quote}/o
     @seps     = /#{@sep}+/o
     @quoted   = @excel ? /(?:=)?#{@quote}/o : @quote
-    @unquoted = /[^#{@sep}#{@cr}#{@lf}][^#{@quote}#{@cr}#{@lf}]*/o
+    @unquoted = /[^#{@sep}#{@cr}#{@lf}][^#{@quote}]*/o
     @leadzero = /\A0\d*\z/
   end
 
@@ -117,6 +117,7 @@ class Censive < StringScanner
 
   def parse
     @rows = []
+    @hold = []
     while row = next_row
       @rows << row
       count = row.size
@@ -135,6 +136,7 @@ class Censive < StringScanner
   end
 
   def next_token
+    @hold.empty? or return @hold.shift
     if scan(@quoted) # quoted cell
       token = ""
       while true
@@ -147,14 +149,22 @@ class Censive < StringScanner
       scan(@sep)
       @strip ? token.strip : token
     elsif match = scan(@unquoted) # unquoted cell(s)
-      if check(@quote) && !match.chomp!(@sep) # if we see a stray quote
+      if check(@quote) && !match.chomp!(@sep) && !match.end_with?(@cr, @lf)
         unless @excel && match.chomp!(@seq) # unless an excel literal, fix it
           match << (scan_until(@eoc) or bomb "stray quote")
           scan(@sep)
         end
       end
-      tokens = match.split(@sep, -1)
-      @strip ? tokens.map!(&:strip) : tokens
+      match.split(@eol, -1).each_with_index do |line, i|
+        if line.empty?
+          @hold.push(nil)
+        else
+          @hold.push(nil) if i > 0
+          cells = line.split(@sep, -1)
+          @hold.push(@strip ? cells.map!(&:strip) : cells)
+        end
+      end
+      @hold.shift
     elsif scan(@sep)
       match = scan(@seps)
       match ? match.split(@sep, -1) : @es
