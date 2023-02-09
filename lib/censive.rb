@@ -118,6 +118,12 @@ class Censive < StringScanner
   # ==[ Parser ]==
 
   def parse
+
+    # TODO: crazy optimization if NO QUOTES in rest
+    # unless rest.include?(@quote)
+    #   @rows = rest...
+    # end
+
     @rows = []
     while row = next_row
       @rows << row
