@@ -10,11 +10,11 @@ digraph finite_state_machine {
   4  [label="4: StartColumn", shape=doublecircle, fillcolor="#ffdddd"];
   8  [label="8: InColumn"];
   5  [label="5: InQuotedColumn"];
-  11 [label="11: InEscapedQuote"];
+  • [label="•: InEscapedQuote"];
   10 [label="10: InDoubleEscapedQuote"];
   6  [label="6: EndColumnSeparator"];
   7  [label="7: EndColumnRow", shape=doublecircle, fillcolor="#ffdddd"];
-  9  [label="9: InRowEnd", shape=doublecircle, fillcolor="#ffdddd"];
+  11 [label="11: InRowEnd", shape=doublecircle, fillcolor="#ffdddd"];
   12 [label="12: CRLF"];
   13 [label="13: EndRow"];
 
@@ -32,25 +32,25 @@ digraph finite_state_machine {
 
   5  -> 5  [label="* / copyout"];
   5  -> 10 [label="quote & @quoting / discard"];
-  5  -> 11 [label="esc & @quoting / discard"];
+  5  -> •  [label="esc & @quoting / discard"];
 
   6  -> 4  [label="* / ε"];
 
-  7  -> 9  [label="* / ε"];
+  7  -> 11 [label="* / ε"];
 
   8  -> 6  [label="sep / discard"];
   8  -> 7  [label="term / ε"]
   8  -> 8  [label="* / copyout"];
 
-  9  -> 12 [label="CR & @isCRLF / discard"];
-  9  -> 13 [label="* / discard"];
+  11 -> 12 [label="CR & @isCRLF / discard"];
+  11 -> 13 [label="* / discard"];
 
   10 -> 5  [label="quote & @quoting & @double-quote / copyout"];
   10 -> 6  [label="sep / discard"];
   10 -> 7  [label="term / ε"]
   10 -> 8  [label="* / copyout"];
 
-  11 -> 5  [label="* / copyout"];
+  •  -> 5  [label="* / copyout"];
 
   12 -> 2  [label="* / ε"];
   12 -> 2  [label="LF / discard"];
