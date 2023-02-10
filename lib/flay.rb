@@ -182,24 +182,19 @@ def template_for_task(task)
 
     # ==[ Calculate the duration of a loop of script runs ]==
 
-    if #{ task.runs } == 1
-      __flay_before_script = 0
-      __flay_after_script  = 0
-    else
-      __flay_before_script = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-      __flay_runs = 0
-      while __flay_runs < #{ task.runs }
+    __flay_before_script = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    __flay_runs = 0
+    while __flay_runs < #{ task.runs }
 
-        # ==[ Before script ]==
+      # ==[ Before script ]==
 
-        #{ task.script }
+      #{ task.script }
 
-        # ==[ After script ]==
+      # ==[ After script ]==
 
-        __flay_runs += 1
-      end
-      __flay_after_script = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      __flay_runs += 1
     end
+    __flay_after_script = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
     # ==[ Code after task ]==
 
