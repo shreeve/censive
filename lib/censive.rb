@@ -4,7 +4,7 @@
 # censive - A quick and lightweight CSV handling library for Ruby
 #
 # Author: Steve Shreeve (steve.shreeve@gmail.com)
-#   Date: Feb 9, 2023
+#   Date: Feb 10, 2023
 #
 # https://crystal-lang.org/api/1.7.2/CSV.html (Crystal's CSV library)
 # https://github.com/ruby/strscan/blob/master/ext/strscan/strscan.c
@@ -90,9 +90,6 @@ class Censive < StringScanner
     @esc      = (@quote * 2)
     @seq      = [@sep, @eq].join # used for parsing in excel mode
 
-    #!# TODO: come up with a clean way to escape/encode all this
-    #!# TODO: maybe define @tokens = "#{@quote}#{@sep}#{@cr}#{@lf}", etc.
-
     # regexes
     @eoc      = /(?=#{"\\" + @sep}|#{@cr}|#{@lf}|\z)/o # end of cell
     @eol      = /#{@cr}#{@lf}?|#{@lf}/o                # end of line
@@ -109,7 +106,6 @@ class Censive < StringScanner
     @rows = nil
     @cols = @cells = 0
 
-    #!# TODO: reset all encodings?
     self.string = str if str
     @encoding = string.encoding
     super()
@@ -256,33 +252,3 @@ class Censive < StringScanner
     abort "\n#{File.basename($0)}: #{msg} at character #{pos} near '#{string[pos-4,7]}'"
   end
 end
-
-if __FILE__ == $0
-  # raw = DATA.gets("\n\n").chomp
-  # raw = File.read(ARGV.first || "lc-2023.csv")
-  raw = File.open("KEN_ALL.CSV", "r:cp932").read
-
-  csv = Censive.new(raw, excel: true, relax: true)
-  csv.export # (excel: true) # sep: "|")
-end
-
-__END__
-"Don",="007",10,"Ed"
-Name,Age,,,Shoe,,,
-"Alice",27,5
-Bob,33,10 1/2
-Charlie or "Chuck",=B2 + B3,9
-Subtotal,=sum(B2:B5),="01234"
-
-A,B,C,D
-A,B,"C",D
-A,B,C",D
-A,B,"C",D
-
-# first line works in "relax" mode, bottom line is compliant
-123,"CHO, JOELLE "JOJO"",456
-123,"CHO, JOELLE ""JOJO""",456
-
-# Excel mode checking
-=,=x,x=,="x",="","","=",123,0123,="123",="0123"
-,=x,x=,x,,,,,,=,,123,="0123",123,,="0123" # <= a little off
