@@ -125,7 +125,7 @@ def template_for_environment(environment, &block)
   |
 end
 
-def template_for_context(context, &block)
+def template_for_context(context, task_code=nil, &block)
   <<~"|"
     #{ section "Context: #{context.name} " }
 
@@ -133,7 +133,7 @@ def template_for_context(context, &block)
 
     #{ context.before }
 
-    #{ yield.join }
+    #{ task_code }
 
     # ==[ Code after context ]==
 
@@ -142,7 +142,7 @@ def template_for_context(context, &block)
 end
 
 def template_for_task(task, &block)
-  <<~"|"
+  yield <<~"|"
     #{ section "Task: #{task.name} " }
 
     # ==[ Code before task ]==
@@ -286,9 +286,11 @@ environments = $config.environments
 contexts     = $config.contexts
 tasks        = $config.tasks
 
+x = \
 wrap(environments, :environment) do |environment|
-  wrap(tasks, :task) do |task|
-    wrap(contexts, :context) do |context|
+  wrap(tasks, :task) do |task_code|
+    wrap(contexts, :context, task_code) do |context|
+      "cheetos"
     end
   end
 end
