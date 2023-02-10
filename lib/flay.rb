@@ -15,15 +15,13 @@
 # ============================================================================
 
 class Hash
-  def +@; Config[self]; end
-end
+  alias_method :default_lookup, :[]
 
-class Config < Hash
   def [](key, miss=nil)
-    key?(sym = key.to_sym) and return super(sym) || miss
+    key?(sym = key.to_sym) and return default_lookup(sym) || miss
     ary = key.to_s.split(/(?:[.\/\[]|\][.\/]?)/)
     val = ary.inject(self) do |obj, sub|
-      if    obj == self        then super(sub.to_sym)
+      if    obj == self        then default_lookup(sub.to_sym)
       elsif obj == nil         then break
       elsif sub =~ /\A-?\d*\z/ then obj[sub.to_i]
       else                          obj[sub.to_sym]
