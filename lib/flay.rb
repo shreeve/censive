@@ -88,20 +88,20 @@ $config = {
       name: "Task 1",
       runs: 35,
       before: <<~"|",
-        # Task 1 before
+        # task 1 before
       |
       after: <<~"|",
-        # Task 1 after
+        # task 1 after
       |
     },
     {
       name: "Task 2",
       secs: 30,
       before: <<~"|",
-        # Task 2 before
+        # task 2 before
       |
       after: <<~"|",
-        # Task 2 after
+        # task 2 after
       |
     },
   ],
@@ -112,15 +112,8 @@ $config = {
 def template_for_environment(environment, &block)
   <<~"|"
     #{ section "Environment: #{environment.name} " }
-
-    # ==[ Code before environment ]==
-
     #{ environment.before }
-
     #{ yield.join }
-
-    # ==[ Code after environment ]==
-
     #{ environment.after }
   |
 end
@@ -128,24 +121,17 @@ end
 def template_for_context(context, task_code=nil, &block)
   <<~"|"
     #{ section "Context: #{context.name} " }
-
-    # ==[ Code before context ]==
-
     #{ context.before }
-
     #{ task_code }
-
-    # ==[ Code after context ]==
-
     #{ context.after }
   |
 end
 
 def template_for_task(task, &block)
+  return yield "--[ Code for task #{task.name} ]--\n"
+
   yield <<~"|"
     #{ section "Task: #{task.name} " }
-
-    # ==[ Code before task ]==
 
     #{ task.before }
 
@@ -178,8 +164,6 @@ def template_for_task(task, &block)
       __flay_runs += 1
     end
     __flay_after_script = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-
-    # ==[ Code after task ]==
 
     #{ task.after }
 
@@ -294,3 +278,5 @@ wrap(environments, :environment) do |environment|
     end
   end
 end
+
+puts x
