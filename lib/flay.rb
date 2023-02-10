@@ -34,39 +34,29 @@ class Hash
   end
 end
 
-config = +{
-  global: [
-    name: "Global",
-    before: <<~'|',
-      # Global before
-    |
-    after: <<~'|',
-      # Global after
-    |
+config = {
+  environments: [
+    {
+      name: "Environment 1",
+      before: <<~'|',
+        # Environment 1 before
+      |
+      after: <<~'|',
+        # Environment 1 after
+      |
+    },
+    {
+      name: "Environment 2",
+      before: <<~'|',
+        # Environment 1 before
+      |
+      after: <<~'|',
+        # Environment 1 after
+      |
+    },
   ],
 
   contexts: [
-    {
-      name: "Task 1",
-      before: <<~'|',
-        # Task 1 before
-      |
-      after: <<~'|',
-        # Task 1 after
-      |
-    },
-    {
-      name: "Task 2",
-      before: <<~'|',
-        # Task 2 before
-      |
-      after: <<~'|',
-        # Task 2 after
-      |
-    },
-  ],
-
-  tasks: [
     {
       name: "Context 1",
       before: <<~'|',
@@ -87,6 +77,27 @@ config = +{
       |
       after: <<~'|',
         # context 2 after
+      |
+    },
+  ],
+
+  tasks: [
+    {
+      name: "Task 1",
+      before: <<~'|',
+        # Task 1 before
+      |
+      after: <<~'|',
+        # Task 1 after
+      |
+    },
+    {
+      name: "Task 2",
+      before: <<~'|',
+        # Task 2 before
+      |
+      after: <<~'|',
+        # Task 2 after
       |
     },
   ],
