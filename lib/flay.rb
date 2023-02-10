@@ -102,3 +102,32 @@ config = {
     },
   ],
 }
+
+# ==[ Helpers ]==
+
+def wrapper(object)
+  puts <<~"end"
+
+    # #{ "=" * 70 }
+    # #{object.name}
+    # #{ "=" * 70 }
+
+    #{object.before }
+  end
+end
+
+# ==[ Workflow ]==
+
+environments = config.environments
+contexts     = config.contexts
+tasks        = config.tasks
+
+environments.each do |environment|
+  wrapper(environment)
+  contexts.each do |context|
+    wrapper(context)
+    tasks.each do |task|
+      wrapper(task)
+    end
+  end
+end
