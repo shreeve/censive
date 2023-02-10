@@ -213,6 +213,65 @@ def template_for_task(task)
   |
 end
 
+def template_for_warmup(task)
+  <<~"|"
+    #{ section "Warmup for task: #{task.name} " }
+
+    # ==[ Code before task ]==
+
+    #{ task.before }
+
+    # ==[ First warmup ]==
+
+    __flay_runs = 0
+    __flay_before = Time.now
+    __flay_target = __flay_before + #{ $config.first_warmup_duration(3) }
+    while Time.now < __flay_target
+
+        # ==[ Before script ]==
+
+        #{ task.script }
+
+        # ==[ After script ]==
+
+        __flay_runs += 1
+    end
+    __flay_after = Time.now
+
+    # ==[ Second warmup ]==
+
+    __flay_100ms = (__flay_runs.to_f / (__flay_after - __flay_before) / 10.0).ceil
+    __flay_loops = 0
+    __flay_duration = 0.0
+    __flay_target = Time.now + #{ $config.second_warmup_duration(6) }
+    while Time.now < __flay_target
+      __flay_runs = 0
+      __flay_before = Time.now
+      while __flay_runs < __flay_100ms
+
+        # ==[ Before script ]==
+
+        #{ task.script }
+
+        # ==[ After script ]==
+
+        __flay_runs += 1
+      end
+      __flay_after = Time.now
+      __flay_loops += __flay_runs
+      __flay_duration += (__flay_after - __flay_before)
+    end
+
+    # ==[ Code after task ]==
+
+    #{ task.after }
+
+    # ==[ Write out timestamps ]==
+
+    File.write("/dev/null", [__flay_duration, __flay_loops].inspect)
+  |
+end
+
 # ==[ Workflow ]==
 
 environments = config.environments
