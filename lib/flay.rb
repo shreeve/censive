@@ -18,9 +18,8 @@
 class Hash
   alias_method :default_lookup, :[]
 
-  def [](key, miss=nil)
-    key?(key)              and return default_lookup(key) || miss
-    key?(sym = key.to_sym) and return default_lookup(sym) || miss
+  def [](key, miss=nil) # key is a symbol
+    key?(key) and return default_lookup(key) || miss
 
     ary = key.to_s.split(/(?:[.\/\[]|\][.\/]?)/)
     val = ary.inject(self) do |obj, sub|
