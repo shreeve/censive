@@ -31,7 +31,7 @@ class Hash
   end
 
   def method_missing(name, *args)
-    name !~ /=$/ ? self[name, *args] : self[$`.to_sym] = args.first
+    name =~ /=$/ ? send(:[]=, $`.to_sym, *args) : send(:[], name, *args)
   end
 end
 
