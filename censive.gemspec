@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = "censive"
-  s.version     = "0.19"
+  s.version     = "0.20"
   s.author      = "Steve Shreeve"
   s.email       = "steve.shreeve@gmail.com"
   s.summary     =
