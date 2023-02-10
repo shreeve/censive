@@ -224,13 +224,13 @@ def template_for_warmup(task)
     __flay_target = __flay_before + #{ $config.first_warmup_duration(3) }
     while Time.now < __flay_target
 
-        # ==[ Before script ]==
+      # ==[ Before script ]==
 
-        #{ task.script }
+      #{ task.script }
 
-        # ==[ After script ]==
+      # ==[ After script ]==
 
-        __flay_runs += 1
+      __flay_runs += 1
     end
     __flay_after = Time.now
 
