@@ -108,11 +108,11 @@ config = {
 # ==[ Helpers ]==
 
 def wrapper(object, type=nil)
-  case type
-  when :environment then puts template_for_environment object
-  when :context     then puts template_for_context     object
-  when :task        then puts template_for_task        object
-  else                   puts section                  object
+  puts case type
+  when :environment then template_for_environment object
+  when :context     then template_for_context     object
+  when :task        then template_for_task        object
+  else                   section                  object
   end
 end
 
