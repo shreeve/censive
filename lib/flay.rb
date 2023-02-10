@@ -107,59 +107,41 @@ $config = {
   ],
 }
 
-# ==[ Helpers ]==
-
-def wrapper(object, type=nil)
-  puts case type
-  when :environment then template_for_environment object
-  when :context     then template_for_context     object
-  when :task        then template_for_task        object
-  else                   section                  object
-  end
-end
-
-def wrap(list, type=nil, **opts)
-  list.each do |item|
-    wrapper(item, type)
-    yield item
-  end
-end
-
-def section(text, wide=78, left=0)
-  [
-    "# ".ljust(wide, "="),
-    "# #{text}",
-    "# ".ljust(wide, "="),
-  ].join("\n")
-end
-
-def hr(text, wide=78, left=0)
-  [ " " * left, "# ==[ ", text, " ]" ].join.ljust(wide, "=")
-end
-
 # ==[ Templates ]==
 
-def template_for_environment(environment)
+def template_for_environment(environment, &code)
   <<~"|"
     #{ section "Environment: #{environment.name} " }
 
     # ==[ Code before environment ]==
 
     #{ environment.before }
+
+    #{ yield.join }
+
+    # ==[ Code after environment ]==
+
+    #{ environment.after }
   |
 end
 
-def template_for_context(context)
+def template_for_context(context, &code)
   <<~"|"
     #{ section "Context: #{context.name} " }
 
     # ==[ Code before context ]==
 
     #{ context.before }
+
+    #{ yield.join }
+
+    # ==[ Code after context ]==
+
+    #{ context.after }
   |
 end
 
-def template_for_task(task)
+def template_for_task(task, &code)
   <<~"|"
     #{ section "Task: #{task.name} " }
 
@@ -210,7 +192,7 @@ def template_for_task(task)
   |
 end
 
-def template_for_warmup(task)
+def template_for_warmup(task, &code)
   <<~"|"
     #{ section "Warmup for task: #{task.name} " }
 
@@ -267,6 +249,35 @@ def template_for_warmup(task)
 
     File.write("/dev/null", [__flay_duration, __flay_loops].inspect)
   |
+end
+
+# ==[ Helpers ]==
+
+def section(text, wide=78, left=0)
+  [
+    "# ".ljust(wide, "="),
+    "# #{text}",
+    "# ".ljust(wide, "="),
+  ].join("\n")
+end
+
+def hr(text, wide=78, left=0)
+  [ " " * left, "# ==[ ", text, " ]" ].join.ljust(wide, "=")
+end
+
+def wrapper(object, type=nil, &code)
+  case type
+  when :environment then template_for_environment object, &code
+  when :context     then template_for_context     object, &code
+  when :task        then template_for_task        object, &code
+  else                   section                  object, &code
+  end
+end
+
+def wrap(list, type=nil, **opts, &code)
+  list.map do |item|
+    wrapper(item, type, &code)
+  end
 end
 
 # ==[ Workflow ]==
