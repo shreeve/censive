@@ -31,13 +31,65 @@ class Config < Hash
     end or miss
   end
 
-config = {
-  name: "My Cool Benchmark",
+  def method_missing(name, *args)
+    name !~ /=$/ ? self[name, *args] : self[$`.to_sym] = args.first
+  end
 end
 
-  contexts: [
+config = +{
+  global: [
+    name: "Global",
+    before: <<~'|',
+      # Global before
+    |
+    after: <<~'|',
+      # Global after
+    |
   ],
-  tasks: [
 
+  contexts: [
+    {
+      name: "Task 1",
+      before: <<~'|',
+        # Task 1 before
+      |
+      after: <<~'|',
+        # Task 1 after
+      |
+    },
+    {
+      name: "Task 2",
+      before: <<~'|',
+        # Task 2 before
+      |
+      after: <<~'|',
+        # Task 2 after
+      |
+    },
+  ],
+
+  tasks: [
+    {
+      name: "Context 1",
+      before: <<~'|',
+        # context 1 before
+      |
+      script: <<~'|',
+        a = [*1..1e5]
+        a.sum
+      |
+      after: <<~'|',
+        # context 1 after
+      |
+    },
+    {
+      name: "Context 2",
+      before: <<~'|',
+        # context 2 before
+      |
+      after: <<~'|',
+        # context 2 after
+      |
+    },
   ],
 }

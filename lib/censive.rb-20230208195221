@@ -4,7 +4,7 @@
 # censive - A quick and lightweight CSV handling library for Ruby
 #
 # Author: Steve Shreeve (steve.shreeve@gmail.com)
-#   Date: Feb 9, 2023
+#   Date: Feb 8, 2023
 #
 # https://crystal-lang.org/api/1.7.2/CSV.html (Crystal's CSV library)
 # https://github.com/ruby/strscan/blob/master/ext/strscan/strscan.c
@@ -14,8 +14,7 @@
 # GOALS:
 # 1. Faster than Ruby's default CSV library
 # 2. Lightweight code with streamlined and optimized logic
-# 3. Support most non-compliant CSV variations (@excel, @relax, etc)
-# 4. Support most commonly used CSV options (@sep, @quote, @strip, @drop, etc)
+# 3. Support most non-compliant CSV variations (eg - @excel, @relax, @strip)
 #
 # TODO:
 # 1. Support IO streaming
@@ -43,7 +42,7 @@ class Censive < StringScanner
   end
 
   def initialize(str=nil,
-    drop:     false   , # drop trailing empty columns?
+    drop:     false   , # drop trailing empty fields?
     encoding: nil     , # character encoding
     excel:    false   , # literals ="01" formulas =A1 + B2 http://bit.ly/3Y7jIvc
     mode:     :compact, # export mode: compact or full
@@ -52,7 +51,7 @@ class Censive < StringScanner
     relax:    false   , # relax quote parsing so ,"Fo"o, => ,"Fo""o",
     rowsep:   "\n"    , # row separator for export
     sep:      ","     , # column separator character
-    strip:    false   , # strip columns when reading
+    strip:    false   , # strip fields when reading
     **opts              # grab bag
   )
     # initialize data source
@@ -66,7 +65,6 @@ class Censive < StringScanner
     reset
 
     # config options
-    @cheat    = true
     @drop     = drop
     @encoding = str.encoding
     @excel    = excel
@@ -101,7 +99,7 @@ class Censive < StringScanner
     @quotes   = /#{@quote}/o
     @seps     = /#{@sep}+/o
     @quoted   = @excel ? /(?:=)?#{@quote}/o : @quote
-    @unquoted = /[^#{@sep}#{@cr}#{@lf}][^#{@quote}#{@cr}#{@lf}]*/o
+    @unquoted = /[^#{@sep}#{@cr}#{@lf}][^#{@quote}]*/o
     @leadzero = /\A0\d*\z/
   end
 
@@ -118,13 +116,8 @@ class Censive < StringScanner
   # ==[ Parser ]==
 
   def parse
-
-    # TODO: crazy optimization if NO QUOTES in rest
-    # unless rest.include?(@quote)
-    #   @rows = rest...
-    # end
-
     @rows = []
+    @hold = []
     while row = next_row
       @rows << row
       count = row.size
@@ -135,18 +128,6 @@ class Censive < StringScanner
   end
 
   def next_row
-    if @cheat and line = scan_until(@eol)
-      row = line.chomp!.split(@sep, -1)
-      row.each do |col|
-        next if (saw = col.count(@quote)).zero?
-        next if (saw == 2) && col.delete_prefix!(@quote) && col.delete_suffix!(@quote)
-        @cheat = false
-        break
-      end if line.include?(@quote)
-      @cheat and return @strip ? row.each(&:strip!) : row
-      unscan
-    end
-
     token = next_token or return
     row = []
     row.push(*token)
@@ -155,6 +136,7 @@ class Censive < StringScanner
   end
 
   def next_token
+    @hold.empty? or return @hold.shift
     if scan(@quoted) # quoted cell
       token = ""
       while true
@@ -167,14 +149,22 @@ class Censive < StringScanner
       scan(@sep)
       @strip ? token.strip : token
     elsif match = scan(@unquoted) # unquoted cell(s)
-      if check(@quote) && !match.chomp!(@sep) # if we see a stray quote
+      if check(@quote) && !match.chomp!(@sep) && !match.end_with?(@cr, @lf)
         unless @excel && match.chomp!(@seq) # unless an excel literal, fix it
           match << (scan_until(@eoc) or bomb "stray quote")
           scan(@sep)
         end
       end
-      tokens = match.split(@sep, -1)
-      @strip ? tokens.map!(&:strip) : tokens
+      match.split(@eol, -1).each_with_index do |line, i|
+        if line.empty?
+          @hold.push(nil)
+        else
+          @hold.push(nil) if i > 0
+          cells = line.split(@sep, -1)
+          @hold.push(@strip ? cells.map!(&:strip) : cells)
+        end
+      end
+      @hold.shift
     elsif scan(@sep)
       match = scan(@seps)
       match ? match.split(@sep, -1) : @es
@@ -258,16 +248,14 @@ class Censive < StringScanner
 end
 
 if __FILE__ == $0
-  # raw = DATA.gets("\n\n").chomp
-  # raw = File.read(ARGV.first || "lc-2023.csv")
-  raw = File.open("KEN_ALL.CSV", "r:cp932").read
-
+  raw = DATA.gets("\n\n").chomp
+# raw = File.read(ARGV.first || "lc-2023.csv")
   csv = Censive.new(raw, excel: true, relax: true)
   csv.export # (excel: true) # sep: "|")
 end
 
 __END__
-"Don",="007",10,"Ed"
+"Don",="007",10,11,"Ed",20
 Name,Age,,,Shoe,,,
 "Alice",27,5
 Bob,33,10 1/2
