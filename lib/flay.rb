@@ -9,6 +9,7 @@
 # GOALS:
 # 1. Provide a simple way to benchmark various code
 # 2. Easy to configure and start comparing results
+# 3. Accurately measure time and speed metrics, see http://bit.ly/3ltE7MP
 #
 # TODO:
 # 1. Everything
