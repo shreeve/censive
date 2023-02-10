@@ -21,6 +21,7 @@ class Hash
   def [](key, miss=nil)
     key?(key)              and return default_lookup(key) || miss
     key?(sym = key.to_sym) and return default_lookup(sym) || miss
+
     ary = key.to_s.split(/(?:[.\/\[]|\][.\/]?)/)
     val = ary.inject(self) do |obj, sub|
       if    obj == self        then default_lookup(sub.to_sym)
