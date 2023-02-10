@@ -41,19 +41,19 @@ $config = {
     {
       name: "Environment 1",
       before: <<~"|",
-        # Environment 1 before
+        # environment 1 before
       |
       after: <<~"|",
-        # Environment 1 after
+        # environment 1 after
       |
     },
     {
       name: "Environment 2",
       before: <<~"|",
-        # Environment 1 before
+        # environment 2 before
       |
       after: <<~"|",
-        # Environment 1 after
+        # environment 2 after
       |
     },
   ],
