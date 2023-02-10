@@ -109,7 +109,7 @@ $config = {
 
 # ==[ Templates ]==
 
-def template_for_environment(environment, &code)
+def template_for_environment(environment, &block)
   <<~"|"
     #{ section "Environment: #{environment.name} " }
 
@@ -125,7 +125,7 @@ def template_for_environment(environment, &code)
   |
 end
 
-def template_for_context(context, &code)
+def template_for_context(context, &block)
   <<~"|"
     #{ section "Context: #{context.name} " }
 
@@ -141,7 +141,7 @@ def template_for_context(context, &code)
   |
 end
 
-def template_for_task(task, &code)
+def template_for_task(task, &block)
   <<~"|"
     #{ section "Task: #{task.name} " }
 
@@ -192,7 +192,7 @@ def template_for_task(task, &code)
   |
 end
 
-def template_for_warmup(task, &code)
+def template_for_warmup(task, &block)
   <<~"|"
     #{ section "Warmup for task: #{task.name} " }
 
@@ -265,18 +265,18 @@ def hr(text, wide=78, left=0)
   [ " " * left, "# ==[ ", text, " ]" ].join.ljust(wide, "=")
 end
 
-def wrapper(object, type=nil, &code)
+def wrapper(object, type=nil, *args, &block)
   case type
-  when :environment then template_for_environment object, &code
-  when :context     then template_for_context     object, &code
-  when :task        then template_for_task        object, &code
-  else                   section                  object, &code
+  when :environment then template_for_environment object, *args, &block
+  when :context     then template_for_context     object, *args, &block
+  when :task        then template_for_task        object, *args, &block
+  else                   section                  object, *args, &block
   end
 end
 
-def wrap(list, type=nil, **opts, &code)
+def wrap(list, type=nil, *args, **opts, &block)
   list.map do |item|
-    wrapper(item, type, &code)
+    wrapper(item, type, *args, &block)
   end
 end
 
