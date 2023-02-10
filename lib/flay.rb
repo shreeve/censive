@@ -37,7 +37,7 @@ class Hash
   end
 end
 
-config = {
+$config = {
   environments: [
     {
       name: "Environment 1",
@@ -272,9 +272,9 @@ end
 
 # ==[ Workflow ]==
 
-environments = config.environments
-contexts     = config.contexts
-tasks        = config.tasks
+environments = $config.environments
+contexts     = $config.contexts
+tasks        = $config.tasks
 
 wrap(environments, :environment) do |environment|
   wrap(tasks, :task) do |task|
