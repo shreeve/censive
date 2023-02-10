@@ -173,11 +173,7 @@ def template_for_task(task)
     else
       __flay_before_empty = Process.clock_gettime(Process::CLOCK_MONOTONIC)
       __flay_runs = 0
-
-      while __flay_runs < #{ task.runs }
-
-        # ==[ This empty loop improves the measurement for our real loop below ]==
-
+      while __flay_runs < #{ task.runs } # this empty loop improves accuracy
         __flay_runs += 1
       end
       __flay_after_empty = Process.clock_gettime(Process::CLOCK_MONOTONIC)
