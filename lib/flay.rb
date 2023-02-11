@@ -111,79 +111,6 @@ $config = {
 
 # ==[ Templates ]==
 
-def template_for_environment(environment, &block)
-  <<~"|"
-    #{ section environment.name }
-
-    #{ environment.before }
-
-    #{ yield.join.rstrip }
-
-    #{ environment.after }
-
-  |
-end
-
-def template_for_context(context, task_code=nil, &block)
-  <<~"|"
-    #{ section context.name }
-
-    #{ context.before }
-
-    #{ task_code }
-
-    #{ context.after }
-
-  |
-end
-
-def template_for_task(task, &block)
-  yield <<~"|".rstrip
-    #{ section task.name }
-
-    #{ task.before }
-
-    # ==[ Calculate the duration of a loop of empty runs ]==
-
-    if #{ task.runs } == 1
-      __flay_before_empty = 0
-      __flay_after_empty  = 0
-    else
-      __flay_before_empty = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-      __flay_runs = 0
-      while __flay_runs < #{ task.runs } # this empty loop improves accuracy
-        __flay_runs += 1
-      end
-      __flay_after_empty = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-    end
-
-    # ==[ Calculate the duration of a loop of script runs ]==
-
-    __flay_before_script = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-    __flay_runs = 0
-    while __flay_runs < #{ task.runs }
-
-      # ==[ Before script ]==
-
-      #{ task.script }
-
-      # ==[ After script ]==
-
-      __flay_runs += 1
-    end
-    __flay_after_script = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-
-    #{ task.after }
-
-    # ==[ Write out timestamps ]==
-
-    __flay_duration = (__flay_after_script - __flay_before_script) -
-                      (__flay_after_empty  - __flay_before_empty )
-
-    File.write("/dev/null", __flay_duration.inspect)
-  |
-end
-
 def template_for_warmup(task, &block)
   <<~"|".rstrip
     #{ section "Warmup for #{task.name}" }
@@ -243,6 +170,87 @@ def template_for_warmup(task, &block)
   |
 end
 
+def template_for_task(task, &block)
+  return yield <<~"|".rstrip
+    #{ section task.name }
+
+    #{ task.before }
+    # #{ "#{task.name } code goes here ***".upcase }
+    #{ task.after }
+  |
+
+  yield <<~"|".rstrip
+    #{ section task.name }
+
+    #{ task.before }
+
+    # ==[ Calculate the duration of a loop of empty runs ]==
+
+    if #{ task.runs } == 1
+      __flay_before_empty = 0
+      __flay_after_empty  = 0
+    else
+      __flay_before_empty = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      __flay_runs = 0
+      while __flay_runs < #{ task.runs } # this empty loop improves accuracy
+        __flay_runs += 1
+      end
+      __flay_after_empty = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    end
+
+    # ==[ Calculate the duration of a loop of script runs ]==
+
+    __flay_before_script = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    __flay_runs = 0
+    while __flay_runs < #{ task.runs }
+
+      # ==[ Before script ]==
+
+      #{ task.script }
+
+      # ==[ After script ]==
+
+      __flay_runs += 1
+    end
+    __flay_after_script = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+
+    #{ task.after }
+
+    # ==[ Write out timestamps ]==
+
+    __flay_duration = (__flay_after_script - __flay_before_script) -
+                      (__flay_after_empty  - __flay_before_empty )
+
+    File.write("/dev/null", __flay_duration.inspect)
+  |
+end
+
+def template_for_context(context, task_code=nil, &block)
+  yield <<~"|".rstrip
+    #{ section context.name }
+
+    #{ context.before }
+
+    #{ task_code }
+
+    #{ context.after }
+
+  |
+end
+
+def template_for_environment(environment, context_code=nil, &block)
+  <<~"|"
+    #{ section environment.name }
+
+    #{ environment.before }
+
+    #{ context_code }
+
+    #{ environment.after }
+
+  |
+end
+
 # ==[ Helpers ]==
 
 def section(text, wide=78, left=0)
@@ -259,9 +267,9 @@ end
 
 def wrapper(object, type=nil, *args, &block)
   case type
-  when :environment then template_for_environment object, *args, &block
-  when :context     then template_for_context     object, *args, &block
   when :task        then template_for_task        object, *args, &block
+  when :context     then template_for_context     object, *args, &block
+  when :environment then template_for_environment object, *args, &block
   else                   section                  object, *args, &block
   end
 end
@@ -274,15 +282,17 @@ end
 
 # ==[ Workflow ]==
 
-environments = $config.environments
-contexts     = $config.contexts
+# 2 * 2 * 2 = 8 units
+
 tasks        = $config.tasks
+contexts     = $config.contexts
+environments = $config.environments
 
 x = \
-wrap(environments, :environment) do |environment|
-  wrap(tasks, :task) do |task_code|
-    wrap(contexts, :context, task_code) do |context|
-      "cheetos"
+wrap(tasks, :task) do |code|
+  wrap(contexts, :context, code) do |code|
+    wrap(environments, :environment, code) do |code|
+      code
     end
   end
 end
