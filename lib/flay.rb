@@ -4,12 +4,12 @@
 # flay - A quick and lightweight benchmarking tool for Ruby
 #
 # Author: Steve Shreeve (steve.shreeve@gmail.com)
-#   Date: Feb 9, 2023
+#   Date: Feb 10, 2023
 # ============================================================================
 # GOALS:
-# 1. Provide a simple way to benchmark various code
-# 2. Easy to configure and start comparing results
-# 3. Accurately measure time and speed metrics, see http://bit.ly/3ltE7MP
+# 1. Provide a simple way to benchmark code
+# 2. Easy to configure and compare results
+# 3. Accurately measure times, see http://bit.ly/3ltE7MP
 #
 # TODO:
 # 1. Everything
@@ -92,7 +92,7 @@ $config = {
       begin: <<~"|".rstrip,
         # task 1 begin
       |
-      script: "task 1 script",
+      script: "# task 1 script",
       end: <<~"|".rstrip,
         # task 1 end
       |
@@ -103,7 +103,7 @@ $config = {
       begin: <<~"|".rstrip,
         # task 2 begin
       |
-      script: "task 2 script",
+      script: "# task 2 script",
       end: <<~"|".rstrip,
         # task 2 end
       |
@@ -233,36 +233,6 @@ def template_for_task(task, code=nil, &block)
   |
 end
 
-def template_for_context(context, code=nil, &block)
-  yield <<~"|"
-    #{ section context.name, use: "=-" }
-
-    #{ context.begin }
-
-    #{ code }
-
-    #{ context.end }
-
-    #{ section context.name, use: "-=" }
-  |
-end
-
-def template_for_environment(environment, code=nil, &block)
-  code = yield(code).join("\n")
-
-  code = <<~"|"
-    #{ section environment.name, use: "=-" }
-
-    #{ environment.begin }
-
-    #{ code.rstrip }
-
-    #{ environment.end }
-
-    #{ section environment.name, use: "-=" }
-  |
-end
-
 # ==[ Helpers ]==
 
 def section(text, wide: 78, left: 0, use: "==")
@@ -286,8 +256,8 @@ cs = contexts     = $config.contexts
 ts = tasks        = $config.tasks
 
 es    .each_with_index do |e, ei|
-  cs  .each_with_index do |c, ci|
-    ts.each_with_index do |t, ti|
+  ts  .each_with_index do |t, ti|
+    cs.each_with_index do |c, ci|
       puts code.result(binding)
     end
   end
@@ -301,28 +271,10 @@ __END__
 #        Task <%= ti + 1 %>: <%= t.name %>
 # ============================================================================
 
-# { environment
-
 <%= e.begin %>
-
-# { context
-
 <%= c.begin %>
-
-# { task
-
 <%= t.begin %>
-
-...
-
+<%= t.script %>
 <%= t.end %>
-
-# } task
-
 <%= c.end %>
-
-# } context
-
 <%= e.end %>
-
-# } environment
