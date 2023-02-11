@@ -121,12 +121,13 @@ def template_for_warmup(task, code=nil, &block)
 
     #{ task.begin }
 
-    # ==[ First warmup ]==
+    # ==[ Warmup ]==
 
-    __flay_runs = 0
-    __flay_begin = Time.now
-    __flay_target = __flay_begin + #{ $config.first_warmup_duration(3) }
-    while Time.now < __flay_target
+    __flay_loops = 0
+    __flay_begin = __flay_timer
+    __flay_until = __flay_begin + #{ $config.warmup(3) }
+
+    while __flay_timer < __flay_until
 
       # ==[ Script begin ]==
 
@@ -134,33 +135,10 @@ def template_for_warmup(task, code=nil, &block)
 
       # ==[ Script end ]==
 
-      __flay_runs += 1
+      __flay_loops += 1
     end
-    __flay_end = Time.now
 
-    # ==[ Second warmup ]==
-
-    __flay_100ms = (__flay_runs.to_f / (__flay_end - __flay_begin) / 10.0).ceil
-    __flay_loops = 0
-    __flay_duration = 0.0
-    __flay_target = Time.now + #{ $config.second_warmup_duration(6) }
-    while Time.now < __flay_target
-      __flay_runs = 0
-      __flay_begin = Time.now
-      while __flay_runs < __flay_100ms
-
-        # ==[ Script begin ]==
-
-        #{ task.script }
-
-        # ==[ Script end ]==
-
-        __flay_runs += 1
-      end
-      __flay_end = Time.now
-      __flay_loops += __flay_runs
-      __flay_duration += (__flay_end - __flay_begin)
-    end
+    __flay_delay = __flay_timer - __flay_begin
 
     # ==[ Task end ]==
 
@@ -170,7 +148,7 @@ def template_for_warmup(task, code=nil, &block)
 
     # ==[ Write out timestamps ]==
 
-    File.write("/dev/null", [__flay_duration, __flay_loops].inspect)
+    File.write("/dev/null", [__flay_loops, __flay_delay].inspect)
   |
 end
 
@@ -190,25 +168,24 @@ def template_for_task(task, code=nil, &block)
 
     #{ task.begin }
 
-    # ==[ Calculate the duration of a loop of empty runs ]==
+    # ==[ Calculate time wasted on loop overhead ]==
 
-    if #{ task.runs } == 1
-      __flay_begin_empty = 0
-      __flay_end_empty  = 0
-    else
-      __flay_begin_empty = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-      __flay_runs = 0
-      while __flay_runs < #{ task.runs } # this empty loop improves accuracy
-        __flay_runs += 1
+    __flay_waste == 0
+    __flay_loops = #{ task.loops.to_i }
+
+    if __flay_loops > 0
+      __flay_loops = 0
+      __flay_begin = __flay_timer
+      while __flay_loops < __flay_loops
+        __flay_loops += 1
       end
-      __flay_end_empty = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      __flay_waste = __flay_timer - __flay_begin
     end
 
-    # ==[ Calculate the duration of a loop of script runs ]==
+    # ==[ Calculate time looping over our task ]==
 
-    __flay_begin_script = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-    __flay_runs = 0
-    while __flay_runs < #{ task.runs }
+    __flay_begin = __flay_timer
+    while __flay_loops < __flay_loops
 
       # ==[ Script begin ]==
 
@@ -216,9 +193,11 @@ def template_for_task(task, code=nil, &block)
 
       # ==[ Script end ]==
 
-      __flay_runs += 1
+      __flay_loops += 1
     end
-    __flay_end_script = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    __flay_delay = __flay_timer - __flay_begin
+
+    # ==[ Task end ]==
 
     #{ task.end }
 
@@ -226,10 +205,7 @@ def template_for_task(task, code=nil, &block)
 
     # ==[ Write out timestamps ]==
 
-    __flay_duration = (__flay_end_script - __flay_begin_script) -
-                      (__flay_end_empty  - __flay_begin_empty )
-
-    File.write("/dev/null", __flay_duration.inspect)
+    File.write("/dev/null", [__flay_loops, __flay_delay].inspect)
   |
 end
 
@@ -270,6 +246,10 @@ __END__
 #     Context <%= ci + 1 %>: <%= c.name %>
 #        Task <%= ti + 1 %>: <%= t.name %>
 # ============================================================================
+
+def __flay_timer
+  Process.clock_gettime(Process::CLOCK_MONOTONIC)
+end
 
 <%= e.begin %>
 <%= c.begin %>
