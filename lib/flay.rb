@@ -117,7 +117,7 @@ def template_for_warmup(task, code=nil, &block)
   <<~"|"
     #{ section "Warmup for #{task.name}", use: "=-" }
 
-    # ==[ Code begin task ]==
+    # ==[ Task begin ]==
 
     #{ task.begin }
 
@@ -128,11 +128,11 @@ def template_for_warmup(task, code=nil, &block)
     __flay_target = __flay_begin + #{ $config.first_warmup_duration(3) }
     while Time.now < __flay_target
 
-      # ==[ begin script ]==
+      # ==[ Script begin ]==
 
       #{ task.script }
 
-      # ==[ end script ]==
+      # ==[ Script end ]==
 
       __flay_runs += 1
     end
@@ -149,11 +149,11 @@ def template_for_warmup(task, code=nil, &block)
       __flay_begin = Time.now
       while __flay_runs < __flay_100ms
 
-        # ==[ begin script ]==
+        # ==[ Script begin ]==
 
         #{ task.script }
 
-        # ==[ end script ]==
+        # ==[ Script end ]==
 
         __flay_runs += 1
       end
@@ -162,7 +162,7 @@ def template_for_warmup(task, code=nil, &block)
       __flay_duration += (__flay_end - __flay_begin)
     end
 
-    # ==[ Code end task ]==
+    # ==[ Task end ]==
 
     #{ task.end }
 
@@ -210,11 +210,11 @@ def template_for_task(task, code=nil, &block)
     __flay_runs = 0
     while __flay_runs < #{ task.runs }
 
-      # ==[ begin script ]==
+      # ==[ Script begin ]==
 
       #{ task.script }
 
-      # ==[ end script ]==
+      # ==[ Script end ]==
 
       __flay_runs += 1
     end
@@ -277,21 +277,6 @@ def hr(text, wide=78, left=0)
   [ " " * left, "# ==[ ", text, " ]" ].join.ljust(wide, "=")
 end
 
-def wrapper(object, type=nil, *args, &block)
-  case type
-  when :task        then template_for_task        object, *args, &block
-  when :context     then template_for_context     object, *args, &block
-  when :environment then template_for_environment object, *args, &block
-  else                   section                  object, *args, &block
-  end
-end
-
-def wrap(list, type=nil, *args, **opts, &block)
-  list.map do |item|
-    wrapper(item, type, *args, &block)
-  end
-end
-
 # ==[ Workflow ]==
 
 code = ERB.new(DATA.read)
@@ -303,9 +288,6 @@ ts = tasks        = $config.tasks
 es    .each_with_index do |e, ei|
   cs  .each_with_index do |c, ci|
     ts.each_with_index do |t, ti|
-      # code = <<~"|"
-      # p [e.name, c.name, t.name]
-      # puts Binding.of_caller(0).eval(code)
       puts code.result(binding)
     end
   end
