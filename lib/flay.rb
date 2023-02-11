@@ -15,6 +15,8 @@
 # 1. Everything
 # ============================================================================
 
+require "erb"
+
 class Hash
   alias_method :default_lookup, :[]
 
@@ -40,20 +42,20 @@ $config = {
   environments: [
     {
       name: "Environment 1",
-      before: <<~"|".rstrip,
-        # environment 1 before
+      begin: <<~"|".rstrip,
+        # environment 1 begin
       |
-      after: <<~"|".rstrip,
-        # environment 1 after
+      end: <<~"|".rstrip,
+        # environment 1 end
       |
     },
     {
       name: "Environment 2",
-      before: <<~"|".rstrip,
-        # environment 2 before
+      begin: <<~"|".rstrip,
+        # environment 2 begin
       |
-      after: <<~"|".rstrip,
-        # environment 2 after
+      end: <<~"|".rstrip,
+        # environment 2 end
       |
     },
   ],
@@ -61,24 +63,24 @@ $config = {
   contexts: [
     {
       name: "Context 1",
-      before: <<~"|".rstrip,
-        # context 1 before
+      begin: <<~"|".rstrip,
+        # context 1 begin
       |
       script: <<~"|".rstrip,
         a = [*1..1e5]
         a.sum
       |
-      after: <<~"|".rstrip,
-        # context 1 after
+      end: <<~"|".rstrip,
+        # context 1 end
       |
     },
     {
       name: "Context 2",
-      before: <<~"|".rstrip,
-        # context 2 before
+      begin: <<~"|".rstrip,
+        # context 2 begin
       |
-      after: <<~"|".rstrip,
-        # context 2 after
+      end: <<~"|".rstrip,
+        # context 2 end
       |
     },
   ],
@@ -87,23 +89,23 @@ $config = {
     {
       name: "Task 1",
       runs: 35,
-      before: <<~"|".rstrip,
-        # task 1 before
+      begin: <<~"|".rstrip,
+        # task 1 begin
       |
       script: "task 1 script",
-      after: <<~"|".rstrip,
-        # task 1 after
+      end: <<~"|".rstrip,
+        # task 1 end
       |
     },
     {
       name: "Task 2",
       secs: 30,
-      before: <<~"|".rstrip,
-        # task 2 before
+      begin: <<~"|".rstrip,
+        # task 2 begin
       |
       script: "task 2 script",
-      after: <<~"|".rstrip,
-        # task 2 after
+      end: <<~"|".rstrip,
+        # task 2 end
       |
     },
   ],
@@ -115,54 +117,54 @@ def template_for_warmup(task, code=nil, &block)
   <<~"|"
     #{ section "Warmup for #{task.name}", use: "=-" }
 
-    # ==[ Code before task ]==
+    # ==[ Code begin task ]==
 
-    #{ task.before }
+    #{ task.begin }
 
     # ==[ First warmup ]==
 
     __flay_runs = 0
-    __flay_before = Time.now
-    __flay_target = __flay_before + #{ $config.first_warmup_duration(3) }
+    __flay_begin = Time.now
+    __flay_target = __flay_begin + #{ $config.first_warmup_duration(3) }
     while Time.now < __flay_target
 
-      # ==[ Before script ]==
+      # ==[ begin script ]==
 
       #{ task.script }
 
-      # ==[ After script ]==
+      # ==[ end script ]==
 
       __flay_runs += 1
     end
-    __flay_after = Time.now
+    __flay_end = Time.now
 
     # ==[ Second warmup ]==
 
-    __flay_100ms = (__flay_runs.to_f / (__flay_after - __flay_before) / 10.0).ceil
+    __flay_100ms = (__flay_runs.to_f / (__flay_end - __flay_begin) / 10.0).ceil
     __flay_loops = 0
     __flay_duration = 0.0
     __flay_target = Time.now + #{ $config.second_warmup_duration(6) }
     while Time.now < __flay_target
       __flay_runs = 0
-      __flay_before = Time.now
+      __flay_begin = Time.now
       while __flay_runs < __flay_100ms
 
-        # ==[ Before script ]==
+        # ==[ begin script ]==
 
         #{ task.script }
 
-        # ==[ After script ]==
+        # ==[ end script ]==
 
         __flay_runs += 1
       end
-      __flay_after = Time.now
+      __flay_end = Time.now
       __flay_loops += __flay_runs
-      __flay_duration += (__flay_after - __flay_before)
+      __flay_duration += (__flay_end - __flay_begin)
     end
 
-    # ==[ Code after task ]==
+    # ==[ Code end task ]==
 
-    #{ task.after }
+    #{ task.end }
 
     #{ section "Warmup for #{task.name}", use: "-=" }
 
@@ -176,9 +178,9 @@ def template_for_task(task, code=nil, &block)
   return yield <<~"|".rstrip
     #{ section task.name, use: "=-" }
 
-    #{ task.before }
+    #{ task.begin }
     # #{ "#{task.name } code goes here ***".upcase }
-    #{ task.after }
+    #{ task.end }
 
     #{ section task.name, use: "-=" }
   |
@@ -186,46 +188,46 @@ def template_for_task(task, code=nil, &block)
   yield <<~"|"
     #{ section task.name, use: "=-" }
 
-    #{ task.before }
+    #{ task.begin }
 
     # ==[ Calculate the duration of a loop of empty runs ]==
 
     if #{ task.runs } == 1
-      __flay_before_empty = 0
-      __flay_after_empty  = 0
+      __flay_begin_empty = 0
+      __flay_end_empty  = 0
     else
-      __flay_before_empty = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      __flay_begin_empty = Process.clock_gettime(Process::CLOCK_MONOTONIC)
       __flay_runs = 0
       while __flay_runs < #{ task.runs } # this empty loop improves accuracy
         __flay_runs += 1
       end
-      __flay_after_empty = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      __flay_end_empty = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     end
 
     # ==[ Calculate the duration of a loop of script runs ]==
 
-    __flay_before_script = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    __flay_begin_script = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     __flay_runs = 0
     while __flay_runs < #{ task.runs }
 
-      # ==[ Before script ]==
+      # ==[ begin script ]==
 
       #{ task.script }
 
-      # ==[ After script ]==
+      # ==[ end script ]==
 
       __flay_runs += 1
     end
-    __flay_after_script = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    __flay_end_script = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
-    #{ task.after }
+    #{ task.end }
 
     #{ section task.name, use: "-=" }
 
     # ==[ Write out timestamps ]==
 
-    __flay_duration = (__flay_after_script - __flay_before_script) -
-                      (__flay_after_empty  - __flay_before_empty )
+    __flay_duration = (__flay_end_script - __flay_begin_script) -
+                      (__flay_end_empty  - __flay_begin_empty )
 
     File.write("/dev/null", __flay_duration.inspect)
   |
@@ -235,11 +237,11 @@ def template_for_context(context, code=nil, &block)
   yield <<~"|"
     #{ section context.name, use: "=-" }
 
-    #{ context.before }
+    #{ context.begin }
 
     #{ code }
 
-    #{ context.after }
+    #{ context.end }
 
     #{ section context.name, use: "-=" }
   |
@@ -251,11 +253,11 @@ def template_for_environment(environment, code=nil, &block)
   code = <<~"|"
     #{ section environment.name, use: "=-" }
 
-    #{ environment.before }
+    #{ environment.begin }
 
     #{ code.rstrip }
 
-    #{ environment.after }
+    #{ environment.end }
 
     #{ section environment.name, use: "-=" }
   |
@@ -292,19 +294,53 @@ end
 
 # ==[ Workflow ]==
 
-tasks        = $config.tasks
-contexts     = $config.contexts
-environments = $config.environments
+code = ERB.new(DATA.read)
 
-code = ""
+es = environments = $config.environments
+cs = contexts     = $config.contexts
+ts = tasks        = $config.tasks
 
-x = \
-wrap(environments, :environment, code) do |code|
-  wrap(tasks, :task, code) do |code|
-    wrap(contexts, :context, code) do |code|
-      code
+es    .each_with_index do |e, ei|
+  cs  .each_with_index do |c, ci|
+    ts.each_with_index do |t, ti|
+      # code = <<~"|"
+      # p [e.name, c.name, t.name]
+      # puts Binding.of_caller(0).eval(code)
+      puts code.result(binding)
     end
   end
 end
 
-puts x
+__END__
+
+# ============================================================================
+# Environment <%= ei + 1 %>: <%= e.name %>
+#     Context <%= ci + 1 %>: <%= c.name %>
+#        Task <%= ti + 1 %>: <%= t.name %>
+# ============================================================================
+
+# { environment
+
+<%= e.begin %>
+
+# { context
+
+<%= c.begin %>
+
+# { task
+
+<%= t.begin %>
+
+...
+
+<%= t.end %>
+
+# } task
+
+<%= c.end %>
+
+# } context
+
+<%= e.end %>
+
+# } environment
