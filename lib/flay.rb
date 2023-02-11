@@ -40,19 +40,19 @@ $config = {
   environments: [
     {
       name: "Environment 1",
-      before: <<~"|",
+      before: <<~"|".rstrip,
         # environment 1 before
       |
-      after: <<~"|",
+      after: <<~"|".rstrip,
         # environment 1 after
       |
     },
     {
       name: "Environment 2",
-      before: <<~"|",
+      before: <<~"|".rstrip,
         # environment 2 before
       |
-      after: <<~"|",
+      after: <<~"|".rstrip,
         # environment 2 after
       |
     },
@@ -61,23 +61,23 @@ $config = {
   contexts: [
     {
       name: "Context 1",
-      before: <<~"|",
+      before: <<~"|".rstrip,
         # context 1 before
       |
-      script: <<~"|",
+      script: <<~"|".rstrip,
         a = [*1..1e5]
         a.sum
       |
-      after: <<~"|",
+      after: <<~"|".rstrip,
         # context 1 after
       |
     },
     {
       name: "Context 2",
-      before: <<~"|",
+      before: <<~"|".rstrip,
         # context 2 before
       |
-      after: <<~"|",
+      after: <<~"|".rstrip,
         # context 2 after
       |
     },
@@ -87,20 +87,22 @@ $config = {
     {
       name: "Task 1",
       runs: 35,
-      before: <<~"|",
+      before: <<~"|".rstrip,
         # task 1 before
       |
-      after: <<~"|",
+      script: "task 1 script",
+      after: <<~"|".rstrip,
         # task 1 after
       |
     },
     {
       name: "Task 2",
       secs: 30,
-      before: <<~"|",
+      before: <<~"|".rstrip,
         # task 2 before
       |
-      after: <<~"|",
+      script: "task 2 script",
+      after: <<~"|".rstrip,
         # task 2 after
       |
     },
@@ -111,27 +113,33 @@ $config = {
 
 def template_for_environment(environment, &block)
   <<~"|"
-    #{ section "Environment: #{environment.name} " }
+    #{ section environment.name }
+
     #{ environment.before }
-    #{ yield.join }
+
+    #{ yield.join.rstrip }
+
     #{ environment.after }
+
   |
 end
 
 def template_for_context(context, task_code=nil, &block)
   <<~"|"
-    #{ section "Context: #{context.name} " }
+    #{ section context.name }
+
     #{ context.before }
+
     #{ task_code }
+
     #{ context.after }
+
   |
 end
 
 def template_for_task(task, &block)
-  return yield "--[ Code for task #{task.name} ]--\n"
-
-  yield <<~"|"
-    #{ section "Task: #{task.name} " }
+  yield <<~"|".rstrip
+    #{ section task.name }
 
     #{ task.before }
 
@@ -177,8 +185,8 @@ def template_for_task(task, &block)
 end
 
 def template_for_warmup(task, &block)
-  <<~"|"
-    #{ section "Warmup for task: #{task.name} " }
+  <<~"|".rstrip
+    #{ section "Warmup for #{task.name}" }
 
     # ==[ Code before task ]==
 
