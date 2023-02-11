@@ -1,5 +1,19 @@
 #!/usr/bin/env ruby
 
+# E C T      E T C
+# =====      =====
+# 1 1 1  =>  1 1 1
+# 2 1 1  =>  1 1 2
+# -----      -----
+# 1 2 1  =>  1 2 1
+# 2 2 1  =>  1 2 2
+# -----      -----
+# 1 1 2  =>  2 1 1
+# 2 1 2  =>  2 1 2
+# -----      -----
+# 1 2 2  =>  2 2 1
+# 2 2 2  =>  2 2 2
+
 # ============================================================================
 # flay - A quick and lightweight benchmarking tool for Ruby
 #
@@ -111,8 +125,8 @@ $config = {
 
 # ==[ Templates ]==
 
-def template_for_warmup(task, &block)
-  <<~"|".rstrip
+def template_for_warmup(task, code=nil, &block)
+  <<~"|"
     #{ section "Warmup for #{task.name}" }
 
     # ==[ Code before task ]==
@@ -170,7 +184,7 @@ def template_for_warmup(task, &block)
   |
 end
 
-def template_for_task(task, &block)
+def template_for_task(task, code=nil, &block)
   return yield <<~"|".rstrip
     #{ section task.name }
 
@@ -179,7 +193,7 @@ def template_for_task(task, &block)
     #{ task.after }
   |
 
-  yield <<~"|".rstrip
+  yield <<~"|"
     #{ section task.name }
 
     #{ task.before }
@@ -225,26 +239,27 @@ def template_for_task(task, &block)
   |
 end
 
-def template_for_context(context, task_code=nil, &block)
-  yield <<~"|".rstrip
+def template_for_context(context, code=nil, &block)
+  yield <<~"|"
     #{ section context.name }
 
     #{ context.before }
 
-    #{ task_code }
+    #{ code }
 
     #{ context.after }
-
   |
 end
 
-def template_for_environment(environment, context_code=nil, &block)
-  <<~"|"
+def template_for_environment(environment, code=nil, &block)
+  code = yield(code).join("\n")
+
+  code = <<~"|"
     #{ section environment.name }
 
     #{ environment.before }
 
-    #{ context_code }
+    #{ code.rstrip }
 
     #{ environment.after }
 
@@ -288,10 +303,12 @@ tasks        = $config.tasks
 contexts     = $config.contexts
 environments = $config.environments
 
+code = ""
+
 x = \
-wrap(tasks, :task) do |code|
-  wrap(contexts, :context, code) do |code|
-    wrap(environments, :environment, code) do |code|
+wrap(environments, :environment, code) do |code|
+  wrap(tasks, :task, code) do |code|
+    wrap(contexts, :context, code) do |code|
       code
     end
   end
