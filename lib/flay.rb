@@ -127,7 +127,7 @@ $config = {
 
 def template_for_warmup(task, code=nil, &block)
   <<~"|"
-    #{ section "Warmup for #{task.name}" }
+    #{ section "Warmup for #{task.name}", use: "=-" }
 
     # ==[ Code before task ]==
 
@@ -178,6 +178,8 @@ def template_for_warmup(task, code=nil, &block)
 
     #{ task.after }
 
+    #{ section "Warmup for #{task.name}", use: "-=" }
+
     # ==[ Write out timestamps ]==
 
     File.write("/dev/null", [__flay_duration, __flay_loops].inspect)
@@ -186,15 +188,17 @@ end
 
 def template_for_task(task, code=nil, &block)
   return yield <<~"|".rstrip
-    #{ section task.name }
+    #{ section task.name, use: "=-" }
 
     #{ task.before }
     # #{ "#{task.name } code goes here ***".upcase }
     #{ task.after }
+
+    #{ section task.name, use: "-=" }
   |
 
   yield <<~"|"
-    #{ section task.name }
+    #{ section task.name, use: "=-" }
 
     #{ task.before }
 
@@ -230,6 +234,8 @@ def template_for_task(task, code=nil, &block)
 
     #{ task.after }
 
+    #{ section task.name, use: "-=" }
+
     # ==[ Write out timestamps ]==
 
     __flay_duration = (__flay_after_script - __flay_before_script) -
@@ -241,13 +247,15 @@ end
 
 def template_for_context(context, code=nil, &block)
   yield <<~"|"
-    #{ section context.name }
+    #{ section context.name, use: "=-" }
 
     #{ context.before }
 
     #{ code }
 
     #{ context.after }
+
+    #{ section context.name, use: "-=" }
   |
 end
 
@@ -255,7 +263,7 @@ def template_for_environment(environment, code=nil, &block)
   code = yield(code).join("\n")
 
   code = <<~"|"
-    #{ section environment.name }
+    #{ section environment.name, use: "=-" }
 
     #{ environment.before }
 
@@ -263,16 +271,17 @@ def template_for_environment(environment, code=nil, &block)
 
     #{ environment.after }
 
+    #{ section environment.name, use: "-=" }
   |
 end
 
 # ==[ Helpers ]==
 
-def section(text, wide=78, left=0)
+def section(text, wide: 78, left: 0, use: "==")
   [
-    "# ".ljust(wide, "="),
+    "# ".ljust(wide, use[ 0]),
     "# #{text}",
-    "# ".ljust(wide, "="),
+    "# ".ljust(wide, use[-1]),
   ].join("\n")
 end
 
@@ -296,8 +305,6 @@ def wrap(list, type=nil, *args, **opts, &block)
 end
 
 # ==[ Workflow ]==
-
-# 2 * 2 * 2 = 8 units
 
 tasks        = $config.tasks
 contexts     = $config.contexts
