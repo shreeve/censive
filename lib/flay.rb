@@ -4,7 +4,7 @@
 # flay - A quick and lightweight benchmarking tool for Ruby
 #
 # Author: Steve Shreeve (steve.shreeve@gmail.com)
-#   Date: Feb 10, 2023
+#   Date: Feb 12, 2023
 # ============================================================================
 # GOALS:
 # 1. Provide a simple way to benchmark code
@@ -54,7 +54,6 @@ def code_for_warmup(task, path)
     __flay_loops = 0
     while __flay_timer < __flay_until
       #{ "\n" + task.script&.strip }
-
       __flay_loops += 1
     end
     __flay_delay = __flay_timer - __flay_begin
@@ -97,12 +96,6 @@ end
 
 # ==[ Helpers ]==
 
-def write(file, code)
-  file.puts(code)
-  file.close
-  yield file.path
-end
-
 def execute(command, path)
   # puts "", "=" * 78, File.read(path), "=" * 78, ""
   IO.popen(["ruby", path].join(" "), &:read)
@@ -111,12 +104,18 @@ def execute(command, path)
 end
 
 def scale(show, unit)
-  span = ["G", "M", "K", " ", "m", "µ", "p"]
   slot = 3
+  span = ["G", "M", "K", " ", "m", "µ", "p"]
   show *= 1000.0 and slot += 1 while show < 1.0
   show /= 1000.0 and slot -= 1 while show > 1000.0
   slot.between?(0, 6) or raise "numeric overflow"
   "%6.2f %s%s" % [show, span[slot], unit]
+end
+
+def write(file, code)
+  file.puts(code)
+  file.close
+  yield file.path
 end
 
 # ==[ Workflow ]==
@@ -137,14 +136,14 @@ sep = "─" * len
 @rm = "├" + cs.inject("─#{sep}") {|s, c| s += "┼─#{sep}─" } + "┤"
 @rb = "└" + cs.inject("─#{sep}") {|s, c| s += "┴─#{sep}─" } + "┘"
 @cb = "│ %-*.*s│" % [len, len, "Task"]
-@cb = cs.inject(@cb) {|s, c| s << " %-*.*s │" % [len, len, c.name.center(len)] }
+@cb = cs.inject(@cb) {|s, c| s << " %-*.*s │" % [len, len, c.name("").center(len)] }
 
 es.each_with_index do |e, ei|
   command = ["/Users/shreeve/.asdf/shims/ruby"] # "-C", "somedirectory", "foo bar..."
 
   puts "", "==[ Environment #{ei + 1}: #{e.name} ]".ljust(75, "="), "" unless e.empty?
   puts @rt
-  puts @cb, @rm # if CONTEXTS_NEEDED
+  puts @cb, @rm
 
   ts.each_with_index do |t, ti|
     print "│ %-*.*s│" % [len, len, t.name]
