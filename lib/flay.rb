@@ -16,6 +16,8 @@
 # ============================================================================
 
 require "erb"
+require "shellwords" # TODO: do we really need this?
+require "tempfile"
 
 class Hash
   alias_method :default_lookup, :[]
@@ -42,19 +44,19 @@ $config = {
   environments: [
     {
       name: "Environment 1",
-      begin: <<~"|".rstrip,
-        # environment 1 begin
+      begin: <<~"|".strip,
+        ruby_ver = "3.2.0" # environment 1 begin
       |
-      end: <<~"|".rstrip,
+      end: <<~"|".strip,
         # environment 1 end
       |
     },
     {
       name: "Environment 2",
-      begin: <<~"|".rstrip,
+      begin: <<~"|".strip,
         # environment 2 begin
       |
-      end: <<~"|".rstrip,
+      end: <<~"|".strip,
         # environment 2 end
       |
     },
@@ -63,23 +65,19 @@ $config = {
   contexts: [
     {
       name: "Context 1",
-      begin: <<~"|".rstrip,
-        # context 1 begin
+      begin: <<~"|".strip,
+        require "csv" # context 1 begin
       |
-      script: <<~"|".rstrip,
-        a = [*1..1e5]
-        a.sum
-      |
-      end: <<~"|".rstrip,
+      end: <<~"|".strip,
         # context 1 end
       |
     },
     {
       name: "Context 2",
-      begin: <<~"|".rstrip,
-        # context 2 begin
+      begin: <<~"|".strip,
+        require "censive" # context 2 begin
       |
-      end: <<~"|".rstrip,
+      end: <<~"|".strip,
         # context 2 end
       |
     },
@@ -89,22 +87,33 @@ $config = {
     {
       name: "Task 1",
       runs: 35,
-      begin: <<~"|".rstrip,
+      begin: <<~"|".strip,
         # task 1 begin
       |
-      script: "# task 1 script",
-      end: <<~"|".rstrip,
+      script: <<~"|",
+
+        # <<<<<
+        # task 1 script
+        a = [*1..1e5]
+        a.sum
+        # >>>>>
+      |
+      end: <<~"|".strip,
         # task 1 end
       |
     },
     {
       name: "Task 2",
       secs: 30,
-      begin: <<~"|".rstrip,
+      begin: <<~"|".strip,
         # task 2 begin
       |
-      script: "# task 2 script",
-      end: <<~"|".rstrip,
+      script: <<~"|".strip,
+        a = 0
+        1e5.to_i.times {|n| a += n }
+        a
+      |
+      end: <<~"|".strip,
         # task 2 end
       |
     },
@@ -113,99 +122,59 @@ $config = {
 
 # ==[ Templates ]==
 
-def template_for_warmup(task, code=nil, &block)
-  <<~"|"
-    #{ section "Warmup for #{task.name}", use: "=-" }
+def code_for_warmup(task, path)
+  <<~"|".strip
 
-    # ==[ Task begin ]==
+    # warmup for #{task.name}"
 
     #{ task.begin }
 
-    # ==[ Warmup ]==
-
+    # calculate iterations during warmup time
     __flay_loops = 0
     __flay_begin = __flay_timer
     __flay_until = __flay_begin + #{ $config.warmup(3) }
-
     while __flay_timer < __flay_until
-
-      # ==[ Script begin ]==
-
-      #{ task.script }
-
-      # ==[ Script end ]==
+      #{ "\n" + task.script&.strip }
 
       __flay_loops += 1
     end
-
     __flay_delay = __flay_timer - __flay_begin
 
-    # ==[ Task end ]==
+    File.write(#{ path.inspect }, [__flay_loops, __flay_delay].inspect)
 
     #{ task.end }
-
-    #{ section "Warmup for #{task.name}", use: "-=" }
-
-    # ==[ Write out timestamps ]==
-
-    File.write("/dev/null", [__flay_loops, __flay_delay].inspect)
   |
 end
 
-def template_for_task(task, code=nil, &block)
-  return yield <<~"|".rstrip
-    #{ section task.name, use: "=-" }
-
-    #{ task.begin }
-    # #{ "#{task.name } code goes here ***".upcase }
-    #{ task.end }
-
-    #{ section task.name, use: "-=" }
-  |
-
-  yield <<~"|"
-    #{ section task.name, use: "=-" }
-
+def code_for_task(task, path)
+  <<~"|".strip
     #{ task.begin }
 
-    # ==[ Calculate time wasted on loop overhead ]==
-
-    __flay_waste == 0
-    __flay_loops = #{ task.loops.to_i }
-
+    # calculate time wasted on loop overhead
+    __flay_waste = 0
+    __flay_loops = 0
     if __flay_loops > 0
       __flay_loops = 0
       __flay_begin = __flay_timer
-      while __flay_loops < __flay_loops
+      while __flay_loops < #{ task.loops.to_i }
         __flay_loops += 1
       end
       __flay_waste = __flay_timer - __flay_begin
     end
 
-    # ==[ Calculate time looping over our task ]==
-
+    # calculate time spent running our task
     __flay_begin = __flay_timer
-    while __flay_loops < __flay_loops
-
-      # ==[ Script begin ]==
-
-      #{ task.script }
-
-      # ==[ Script end ]==
+    __flay_loops = 0
+    while __flay_loops < #{ task.loops.to_i }
+      #{ "\n" + task.script&.strip }
 
       __flay_loops += 1
     end
     __flay_delay = __flay_timer - __flay_begin
 
-    # ==[ Task end ]==
+    File.write(#{ path.inspect }, [__flay_loops, __flay_delay].inspect)
 
     #{ task.end }
-
-    #{ section task.name, use: "-=" }
-
-    # ==[ Write out timestamps ]==
-
-    File.write("/dev/null", [__flay_loops, __flay_delay].inspect)
   |
 end
 
@@ -231,10 +200,36 @@ es = environments = $config.environments
 cs = contexts     = $config.contexts
 ts = tasks        = $config.tasks
 
-es    .each_with_index do |e, ei|
-  ts  .each_with_index do |t, ti|
+# ec = es.size
+# cc = cs.size
+# tc = ts.size
+
+def write(file, code)
+  file.puts(code)
+  file.close
+  yield file.path
+end
+
+def execute(command, path)
+  # puts File.read(path), "=" * 78
+  IO.popen(["ruby", path].shelljoin, &:read)
+  $?.success? or raise
+
+  puts body = File.read(path)
+  eval(File.read(path))
+end
+
+es.each_with_index do |e, ei|
+  command = ["/Users/shreeve/.asdf/shims/ruby"] # "-C", "somedirectory", "foo bar..."
+
+  ts.each_with_index do |t, ti|
     cs.each_with_index do |c, ci|
-      puts code.result(binding)
+      delay = Tempfile.open(['flay-', '.rb']) do |file|
+        t.loops ||= 1e2 # || warmup(e, c, t)
+        write(file, code.result(binding)) do |path|
+          value = execute(command, path)
+        end
+      end
     end
   end
 end
@@ -247,14 +242,12 @@ __END__
 #        Task <%= ti + 1 %>: <%= t.name %>
 # ============================================================================
 
-def __flay_timer
-  Process.clock_gettime(Process::CLOCK_MONOTONIC)
-end
+def __flay_timer; Process.clock_gettime(Process::CLOCK_MONOTONIC); end
 
 <%= e.begin %>
 <%= c.begin %>
-<%= t.begin %>
-<%= t.script %>
-<%= t.end %>
+
+<%= code_for_task(t, file.path) %>
+
 <%= c.end %>
 <%= e.end %>
