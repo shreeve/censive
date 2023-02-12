@@ -114,15 +114,14 @@ end
 
 # ==[ Workflow ]==
 
-flay = "flay-1.rb"
+flay = ARGV.first || "flay-1.rb"
+code = ERB.new(DATA.read)
 
 $config = eval(File.read(flay))
 
-code = ERB.new(DATA.read)
-
-es = environments = $config.environments
-cs = contexts     = $config.contexts
-ts = tasks        = $config.tasks
+es = $config.environments
+cs = $config.contexts
+ts = $config.tasks
 
 # calculate this based on the names and widths of tasks and contexts
 @cb = "            Context 1                Context 2"
