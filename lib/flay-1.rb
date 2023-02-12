@@ -44,7 +44,7 @@
   tasks: [
     {
       name: "Task 1",
-      runs: 35,
+      loops: 10,
       begin: <<~"|".strip,
         # task 1 begin
       |
