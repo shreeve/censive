@@ -44,15 +44,14 @@ end
 
 def code_for_warmup(task, path)
   <<~"|".strip
-
     # warmup for #{task.name}"
 
     #{ task.begin }
 
     # calculate iterations during warmup time
-    __flay_loops = 0
     __flay_begin = __flay_timer
     __flay_until = __flay_begin + #{ $config.warmup(3) }
+    __flay_loops = 0
     while __flay_timer < __flay_until
       #{ "\n" + task.script&.strip }
 
