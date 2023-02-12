@@ -192,6 +192,19 @@ def hr(text, wide=78, left=0)
   [ " " * left, "# ==[ ", text, " ]" ].join.ljust(wide, "=")
 end
 
+def write(file, code)
+  file.puts(code)
+  file.close
+  yield file.path
+end
+
+def execute(command, path)
+  # puts File.read(path), "=" * 78
+  IO.popen(["ruby", path].shelljoin, &:read)
+  $?.success? or raise
+  eval(File.read(path))
+end
+
 # ==[ Workflow ]==
 
 code = ERB.new(DATA.read)
@@ -204,38 +217,26 @@ ts = tasks        = $config.tasks
 # cc = cs.size
 # tc = ts.size
 
-def write(file, code)
-  file.puts(code)
-  file.close
-  yield file.path
-end
-
-def execute(command, path)
-  # puts File.read(path), "=" * 78
-  IO.popen(["ruby", path].shelljoin, &:read)
-  $?.success? or raise
-
-  puts body = File.read(path)
-  eval(File.read(path))
-end
+# banners
+@eb = ["", "# ==[ Environment %d ]".ljust(78, "="), "", ""] * "\n"
+@cb = ["", *cs.map(&:name)].map{|e| "%*s%s" % [6, "", e] }.join
 
 es.each_with_index do |e, ei|
   command = ["/Users/shreeve/.asdf/shims/ruby"] # "-C", "somedirectory", "foo bar..."
-
-  puts "", "# ==[ Environment #{ei + 1} ]".ljust(78, "="), ""
+  puts @eb % (ei + 1)
+  puts @cb
   ts.each_with_index do |t, ti|
+    print "Task #{ti + 1}: "
     cs.each_with_index do |c, ci|
       delay = Tempfile.open(['flay-', '.rb']) do |file|
         t.loops ||= 1e2 # || warmup(e, c, t)
-
-        print "Task #{ti + 1}: "
         write(file, code.result(binding)) do |path|
-
-          print "Context #{ci + 1}: "
-          value = execute(command, path)
+          runs, time = execute(command, path)
+          print "    (%d, %.2f)" % [runs, time]
         end
       end
     end
+    print "\n"
   end
 end
 
