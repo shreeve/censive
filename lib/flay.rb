@@ -222,11 +222,16 @@ end
 es.each_with_index do |e, ei|
   command = ["/Users/shreeve/.asdf/shims/ruby"] # "-C", "somedirectory", "foo bar..."
 
+  puts "", "# ==[ Environment #{ei + 1} ]".ljust(78, "="), ""
   ts.each_with_index do |t, ti|
     cs.each_with_index do |c, ci|
       delay = Tempfile.open(['flay-', '.rb']) do |file|
         t.loops ||= 1e2 # || warmup(e, c, t)
+
+        print "Task #{ti + 1}: "
         write(file, code.result(binding)) do |path|
+
+          print "Context #{ci + 1}: "
           value = execute(command, path)
         end
       end
