@@ -136,10 +136,7 @@ es = environments = $config.environments
 cs = contexts     = $config.contexts
 ts = tasks        = $config.tasks
 
-# ec = es.size
-# cc = cs.size
-# tc = ts.size
-
+# calculate this based on the names and widths of tasks and contexts
 @cb = "            Context 1                Context 2"
 
 es.each_with_index do |e, ei|
