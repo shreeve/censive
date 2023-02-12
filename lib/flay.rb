@@ -12,7 +12,8 @@
 # 3. Accurately measure times, see http://bit.ly/3ltE7MP
 #
 # TODO:
-# 1. Everything
+# 1. Implement proper display of results
+# 2. Implement some magic so the config file is very easy to populate
 # ============================================================================
 
 require "erb"
