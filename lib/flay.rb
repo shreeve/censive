@@ -71,8 +71,7 @@ def code_for_task(task, path)
 
     # calculate time wasted on loop overhead
     __flay_waste = 0
-    __flay_loops = 0
-    if __flay_loops > 0
+    if #{ task.loops.to_i } > 0
       __flay_loops = 0
       __flay_begin = __flay_timer
       while __flay_loops < #{ task.loops.to_i }
@@ -82,11 +81,10 @@ def code_for_task(task, path)
     end
 
     # calculate time spent running our task
-    __flay_begin = __flay_timer
     __flay_loops = 0
+    __flay_begin = __flay_timer
     while __flay_loops < #{ task.loops.to_i }
       #{ "\n" + task.script&.strip }
-
       __flay_loops += 1
     end
     __flay_delay = __flay_timer - __flay_begin
@@ -106,45 +104,64 @@ def write(file, code)
 end
 
 def execute(command, path)
-  # puts File.read(path), "=" * 78
+  # puts "", "=" * 78, File.read(path), "=" * 78, ""
   IO.popen(["ruby", path].join(" "), &:read)
   $?.success? or raise
   eval(File.read(path))
 end
 
+def scale(show, unit)
+  span = ["G", "M", "K", " ", "m", "µ", "p"]
+  slot = 3
+  show *= 1000.0 and slot += 1 while show < 1.0
+  show /= 1000.0 and slot -= 1 while show > 1000.0
+  slot.between?(0, 6) or raise "numeric overflow"
+  "%6.2f %s%s" % [show, span[slot], unit]
+end
+
 # ==[ Workflow ]==
 
-flay = ARGV.first || "flay-1.rb"
+flay = ARGV.first || "flay-2.rb"
 code = ERB.new(DATA.read)
 
 $config = eval(File.read(flay))
 
-es = $config.environments
-cs = $config.contexts
-ts = $config.tasks
+es = $config.environments || [{}]
+cs = $config.contexts     || [{}]
+ts = $config.tasks        || [{}]
 
-# calculate this based on the names and widths of tasks and contexts
-@cb = "            Context 1                Context 2"
+# box sections
+len = 22
+sep = "─" * len
+@rt = "┌" + cs.inject("─#{sep}") {|s, c| s += "┬─#{sep}─" } + "┐"
+@rm = "├" + cs.inject("─#{sep}") {|s, c| s += "┼─#{sep}─" } + "┤"
+@rb = "└" + cs.inject("─#{sep}") {|s, c| s += "┴─#{sep}─" } + "┘"
+@cb = "│ %-*.*s│" % [len, len, "Task"]
+@cb = cs.inject(@cb) {|s, c| s << " %-*.*s │" % [len, len, c.name.center(len)] }
 
 es.each_with_index do |e, ei|
   command = ["/Users/shreeve/.asdf/shims/ruby"] # "-C", "somedirectory", "foo bar..."
-  puts "", "# ==[ #{e.name} ]".ljust(78, "="), ""
-  puts @cb
+
+  puts "", "==[ Environment #{ei + 1}: #{e.name} ]".ljust(75, "="), "" unless e.empty?
+  puts @rt
+  puts @cb, @rm # if CONTEXTS_NEEDED
+
   ts.each_with_index do |t, ti|
-    print "Task #{ti + 1}: "
+    print "│ %-*.*s│" % [len, len, t.name]
     cs.each_with_index do |c, ci|
       delay = Tempfile.open(['flay-', '.rb']) do |file|
         t.loops ||= 1e2 # || warmup(e, c, t)
-        write(file, code.result(binding)) do |path|
+        write(file, code.result(binding).rstrip + "\n") do |path|
           runs, time = execute(command, path)
           rate = runs / time
-          print "    %.2f secs @ %.2f Hz" % [time, rate]
+          print " %s @ %s │" % [scale(time, "s"), scale(rate, "Hz")]
         end
       end
     end
     print "\n"
   end
 end
+puts @rb
 
 __END__
 
