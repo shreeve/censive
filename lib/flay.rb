@@ -16,7 +16,6 @@
 # ============================================================================
 
 require "erb"
-require "shellwords" # TODO: do we really need this?
 require "tempfile"
 
 class Hash
@@ -119,7 +118,7 @@ end
 
 def execute(command, path)
   # puts File.read(path), "=" * 78
-  IO.popen(["ruby", path].shelljoin, &:read)
+  IO.popen(["ruby", path].join(" "), &:read)
   $?.success? or raise
   eval(File.read(path))
 end
