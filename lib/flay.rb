@@ -99,18 +99,6 @@ end
 
 # ==[ Helpers ]==
 
-def section(text, wide: 78, left: 0, use: "==")
-  [
-    "# ".ljust(wide, use[ 0]),
-    "# #{text}",
-    "# ".ljust(wide, use[-1]),
-  ].join("\n")
-end
-
-def hr(text, wide=78, left=0)
-  [ " " * left, "# ==[ ", text, " ]" ].join.ljust(wide, "=")
-end
-
 def write(file, code)
   file.puts(code)
   file.close
