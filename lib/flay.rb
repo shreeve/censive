@@ -4,7 +4,7 @@
 # flay - A quick and lightweight benchmarking tool for Ruby
 #
 # Author: Steve Shreeve (steve.shreeve@gmail.com)
-#   Date: Feb 12, 2023
+#   Date: Feb 13, 2023
 # ============================================================================
 # GOALS:
 # 1. Provide a simple way to benchmark code
