@@ -4,7 +4,7 @@
 # flay - A quick and lightweight benchmarking tool for Ruby
 #
 # Author: Steve Shreeve (steve.shreeve@gmail.com)
-#   Date: Feb 13, 2023
+#   Date: Feb 14, 2023
 # ============================================================================
 # GOALS:
 # 1. Provide a simple way to benchmark code
@@ -43,7 +43,6 @@ OptionParser.new.instance_eval do
   self
 end.parse!(into: opts={}) rescue abort($!.message)
 
-# runs = opts[:iterations]
 hush = opts[:quiet]
 runs = opts[:iterations]; abort "invalid number of runs" if runs && runs < 1
 show = opts[:stats] || "time,ips,spi"
@@ -144,19 +143,6 @@ def boxlines(main, cols, runs=1)
   end
 end
 
-def stats(list, scope=nil)
-  list.map do |item|
-    pair = case item
-    when "loops" then ["runs"     , "times"]
-    when "time"  then ["time"     , "s"    ]
-    when "ips"   then ["runs/time", "i/s"  ]
-    when "spi"   then ["time/runs", "s/i"  ]
-    else abort "unknown statistic #{item.inspect}"
-    end
-    scope ? eval(pair[0], scope) : pair[1]
-  end
-end
-
 def execute(command, path)
   # puts "", "=" * 78, File.read(path), "=" * 78, ""
   IO.popen(["ruby", path].join(" "), &:read)
@@ -172,6 +158,19 @@ def scale(show, unit)
   show /= 1000.0 and slot -= 1 while show >= 1000.0
   slot.between?(0, 6) or abort Overflow
   "%6.2f %s%s" % [show, span[slot], unit]
+end
+
+def stats(list, scope=nil)
+  list.map do |item|
+    pair = case item
+    when "loops" then ["runs"     , "times"]
+    when "time"  then ["time"     , "s"    ]
+    when "ips"   then ["runs/time", "i/s"  ]
+    when "spi"   then ["time/runs", "s/i"  ]
+    else abort "unknown statistic #{item.inspect}"
+    end
+    scope ? eval(pair[0], scope) : pair[1]
+  end
 end
 
 def write(file, code)
