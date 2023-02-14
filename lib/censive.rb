@@ -28,7 +28,7 @@
 require "strscan"
 
 class Censive < StringScanner
-  attr :encoding, :out
+  attr :encoding, :out, :rows
 
   def self.parse(...)
     new(...).parse
@@ -180,9 +180,9 @@ class Censive < StringScanner
   end
 
   def export(**opts)
-    out = opts.empty? ? self : self.class.writer(**opts)
-    each {|row| out << row }
-    out.out
+    dest = opts.empty? ? self : self.class.writer(**opts)
+    each {|row| dest << row }
+    dest
   end
 
   # ==[ Helpers ]==
