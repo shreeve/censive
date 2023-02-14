@@ -229,8 +229,8 @@ es.each_with_index do |e, ei|
     end
     print "\n"
   end
+  puts rb
 end
-puts rb
 
 # show the comparison
 rank.sort! {|a, b| b[0] <=> a[0] }
