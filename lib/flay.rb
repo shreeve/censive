@@ -26,8 +26,10 @@ OptionParser.new.instance_eval do
 
   on "-i <count>"       , "--iterations", "Force the number of iterations for each task", Integer
   on "-h"               , "--help"      , "Show help and command usage" do Kernel.abort to_s; end
+  on "-q"               , "--quiet"     , "Do not display command line and version details", TrueClass
   on "-r"               , "--reverse"   , "Show contexts vertically and tasks horizontally", TrueClass
   on "-s <time,ips,spi>", "--stats "    , "Comma-separated list of stats (loops, time, ips, spi)"
+
   separator <<~"end"
 
       Available statistics:
@@ -42,6 +44,7 @@ OptionParser.new.instance_eval do
 end.parse!(into: opts={}) rescue abort($!.message)
 
 # runs = opts[:iterations]
+hush = opts[:quiet]
 runs = opts[:iterations]; abort "invalid number of runs" if runs && runs < 1
 show = opts[:stats] || "time,ips,spi"
 show = show.downcase.scan(/[a-z]+/i).uniq & %w[ ips loops spi time ]
@@ -196,11 +199,11 @@ rt, rm, rb = boxlines(wide, cols.map {|e| e.size + 8 }, (swap ? cs : ts).size)
 
 # begin output
 puts "```"
-puts [$0, *ARGV].shelljoin
-puts IO.popen(["ruby", "-v"].join(" "), &:read)
+puts [$0, *ARGV].shelljoin, "" unless hush
 
 # loop over environment(s)
 es.each_with_index do |e, ei|
+  puts IO.popen(["ruby", "-v"].join(" "), &:read) unless hush
   puts rt
 
   command = ["/Users/shreeve/.asdf/shims/ruby"]
