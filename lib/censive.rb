@@ -4,7 +4,7 @@
 # censive - A quick and lightweight CSV handling library for Ruby
 #
 # Author: Steve Shreeve (steve.shreeve@gmail.com)
-#   Date: Feb 10, 2023
+#   Date: Feb 14, 2023
 #
 # https://crystal-lang.org/api/1.7.2/CSV.html (Crystal's CSV library)
 # https://github.com/ruby/strscan/blob/master/ext/strscan/strscan.c
@@ -20,7 +20,7 @@
 # TODO:
 # 1. Support IO streaming
 # 2. Review all encodings, we may be losing speed when mixing encodings
-# 3. Huge speedup possible if our @unquoted regex reads beyond @cr?@lf's
+# 3. Speedup possible if our @unquoted regex reads beyond @eol's
 # 4. Will using String#freeze give us a speed up?
 # 5. Implement support for scan_until(string) <= right now only regex is valid
 # ============================================================================
@@ -114,12 +114,6 @@ class Censive < StringScanner
   # ==[ Parser ]==
 
   def parse
-
-    # TODO: crazy optimization if NO QUOTES in rest
-    # unless rest.include?(@quote)
-    #   @rows = rest...
-    # end
-
     @rows = []
     while row = next_row
       @rows << row
