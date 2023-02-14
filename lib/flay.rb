@@ -24,7 +24,7 @@ require "tempfile"
 OptionParser.new.instance_eval do
   @banner  = "usage: #{program_name} [options] <dir ...>"
 
-# on "-i"               , "--iterations", "Override the number of iterations", Integer
+  on "-i <count>"       , "--iterations", "Force the number of iterations for each task", Integer
   on "-h"               , "--help"      , "Show help and command usage" do Kernel.abort to_s; end
   on "-r"               , "--reverse"   , TrueClass
   on "-s <time,ips,spi>", "--stats "    , "Comma-separated list of stats (loops, time, ips, spi)"
@@ -42,6 +42,7 @@ OptionParser.new.instance_eval do
 end.parse!(into: opts={}) rescue abort($!.message)
 
 # runs = opts[:iterations]
+runs = opts[:iterations]; abort "invalid number of runs" if runs && runs < 1
 show = opts[:stats] || "time,ips,spi"
 show = show.downcase.scan(/[a-z]+/i).uniq & %w[ ips loops spi time ]
 show.empty? and abort "invalid list of statistics #{opts[:stats].inspect}"
@@ -218,7 +219,8 @@ es.each_with_index do |e, ei|
     xs.each_with_index do |x, xi|
     t, ti, c, ci = swap ? [y, yi, x, xi] : [x, xi, y, yi]
       delay = Tempfile.open(['flay-', '.rb']) do |file|
-        loops = t.loops ||= 1e1 # || warmup(e, c, t)
+        t.loops = runs if runs # || warmup(e, c, t)
+        t.loops ||= 1
         write(file, code.result(binding).rstrip + "\n") do |path|
           runs, time = execute(command, path)
           vals = stats(show, binding)
