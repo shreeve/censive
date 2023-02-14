@@ -269,6 +269,7 @@ slow = rank.last[0]
 pict = "%.2fx slower"
 room = (pict % [fast / slow]).size
 cols = [11, room, 6]
+cols.pop if (es.size == 1) && (cs.size == 1)
 full = cols.sum + (cols.size - 1) * 3
 rt, rm, rb = boxlines(wide, cols)
 rh = "│ %-*.*s │" % [wide, wide, "Rank"]
@@ -285,7 +286,8 @@ rank.each do |ips, ei, ci, ti|
   else
     print  "%*.*s" % [room, room, pict % [fast/ips]]
   end
-  print " │ %-6s │\n" % ([ei+1,ci+1,ti+1] * "/")
+  print " │ %-6s" % ([ei+1,ci+1,ti+1] * "/") if cols.size > 2
+  print " │\n"
 end
 puts rb
 puts "```" unless hush
