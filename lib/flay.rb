@@ -17,8 +17,33 @@
 # ============================================================================
 
 require "erb"
+require "optparse"
 require "shellwords"
 require "tempfile"
+
+OptionParser.new.instance_eval do
+  @banner  = "usage: #{program_name} [options] <dir ...>"
+
+# on "-i"               , "--iterations", "Override the number of iterations", Integer
+  on "-h"               , "--help"      , "Show help and command usage" do Kernel.abort to_s; end
+  on "-s <time,ips,spi>", "--stats "    , "Comma-separated list of stats (loops, time, ips, spi)"
+  separator <<~"end"
+
+      Available statistics:
+
+        ips      iterations per second
+        loops    number of iterations
+        spi      seconds for iteration
+        time     time to run all iterations
+  end
+
+  self
+end.parse!(into: opts={}) rescue abort($!.message)
+
+# runs = opts[:iterations]
+show = opts[:stats     ] || "time,ips,spi"
+show = show.downcase.scan(/[a-z]+/i).uniq & %w[ ips loops spi time ]
+show.empty? and abort "invalid list of statistics #{opts[:stats].inspect}"
 
 class Hash
   alias_method :default_lookup, :[]
@@ -113,10 +138,10 @@ end
 def stats(list, scope=nil)
   list.map do |item|
     pair = case item
-    when :loops then ["runs"     , "times"]
-    when :time  then ["time"     , "s"    ]
-    when :ips   then ["runs/time", "i/s"  ]
-    when :spi   then ["time/runs", "s/i"  ]
+    when "loops" then ["runs"     , "times"]
+    when "time"  then ["time"     , "s"    ]
+    when "ips"   then ["runs/time", "i/s"  ]
+    when "spi"   then ["time/runs", "s/i"  ]
     else abort "unknown statistic #{item.inspect}"
     end
     scope ? eval(pair[0], scope) : pair[1]
@@ -148,7 +173,6 @@ end
 # ==[ Workflow ]==
 
 flay = ARGV.first || "flay-2.rb"
-show = [ :loops, :time, :ips, :spi ]
 
 code = ERB.new(DATA.read)
 
@@ -159,7 +183,6 @@ cs = $config.contexts     || [{}]
 ts = $config.tasks        || [{}]
 
 # drawing
-show = [:time, :ips, :spi]
 cols = stats(show)
 full = cols.map(&:size).sum + cols.size * 11 - 3
 wide = [*es.map {|e| e.name("").size}, *ts.map {|t| t.name("").size}].max
