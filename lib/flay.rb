@@ -25,11 +25,13 @@ require "tempfile"
 OptionParser.new.instance_eval do
   @banner  = "usage: #{program_name} [options] <dir ...>"
 
-  on "-i <count>"       , "--iterations", "Force the number of iterations for each task", Integer
+  on "-c"               , "--[no-]color", "Enable color output (default is true)", TrueClass
+  on "-d"               , "--debug"     , "Enable debug mode", TrueClass
   on "-h"               , "--help"      , "Show help and command usage" do Kernel.abort to_s; end
-  on "-q"               , "--quiet"     , "Do not display command line and version details", TrueClass
+  on "-i <count>"       , "--iterations", "Force the number of iterations for each task", Integer
   on "-r"               , "--reverse"   , "Show contexts vertically and tasks horizontally", TrueClass
   on "-s <time,ips,spi>", "--stats "    , "Comma-separated list of stats (loops, time, ips, spi)"
+  on "-v"               , "--verbose"   , "Show command, version details, and markdown backticks", TrueClass
 
   separator <<~"end"
 
@@ -44,32 +46,63 @@ OptionParser.new.instance_eval do
   self
 end.parse!(into: opts={}) rescue abort($!.message)
 
-hush = opts[:quiet]
-runs = opts[:iterations]; abort "invalid number of runs" if runs && runs < 1
-show = opts[:stats] || "time,ips,spi"
-show = show.downcase.scan(/[a-z]+/i).uniq & %w[ ips loops spi time ]
-show.empty? and abort "invalid list of statistics #{opts[:stats].inspect}"
+# option munging
+ansi =  opts[:color]; ansi = true if ansi.nil?
+hack =  opts[:debug]
+hush = !opts[:verbose]
+runs =  opts[:iterations]; abort "invalid number of runs" if runs && runs < 1
+show =  opts[:stats] || "time,ips,spi"
+show =  show.downcase.scan(/[a-z]+/i).uniq & %w[ ips loops spi time ]
 swap = !opts[:reverse]
+
+# option errors
+show.empty? and abort "invalid list of statistics #{opts[:stats].inspect}"
+
+# ==[ Define some constants, ansi codes, and make hashes more flexible ]==
 
 Infinity = 1.0 / 0
 Overflow = "\n\nERROR: numeric overflow"
 
-class Hash
-  alias_method :default_lookup, :[]
+module Ansi
+  refine String do
+    $ansi = <<~"".scan(/(\d+)(?:\/(\d+))?=(\w+)/).inject({}) do |ansi, (code, undo, name)|
+      0=reset 1/22=bold 2/22=dim 3/23=italic 4/24=under 5/25=blink 7/27=inverse 9/29=strike
+      30=black 31=red 32=green 33=yellow 34=blue 35=magenta 36=cyan 37=white 39=default
+      40=black 41=red 42=green 43=yellow 44=blue 45=magenta 46=cyan 47=white 49=default
 
-  def [](key, miss=nil) # key is a symbol
-    key?(key) and return default_lookup(key) || miss
-
-    ary = key.to_s.split(/(?:[.\/\[]|\][.\/]?)/)
-    val = ary.inject(self) do |obj, sub|
-      if    obj == self        then default_lookup(sub.to_sym)
-      elsif obj == nil         then break
-      elsif sub =~ /\A-?\d*\z/ then obj[sub.to_i]
-      else                          obj[sub.to_sym]
-      end
-    end or miss
+      ansi[name +                       "_off"     ] = undo if undo
+      ansi[name + (code[0,2] =~ /4\d/ ? "_bg" : "")] = code
+      ansi
+    end
+    def ansi (*list); list.map {|code| "\e[#{$ansi[code.to_s] || 0}m"}.join + self; end
+    def ansi!(*list); ansi(*list) + "\e[0m"; end
   end
+end
 
+using Ansi
+
+module FlexHash
+  refine Hash do
+    alias_method :default_lookup, :[]
+
+    def [](key, miss=nil) # method_missing calls this with key as a symbol
+      key?(key) and return default_lookup(key) || miss
+
+      ary = key.to_s.split(/(?:[.\/\[]|\][.\/]?)/)
+      val = ary.inject(self) do |obj, sub|
+        if    obj == self        then default_lookup(sub.to_sym)
+        elsif obj == nil         then break
+        elsif sub =~ /\A-?\d*\z/ then obj[sub.to_i]
+        else                          obj[sub.to_sym]
+        end
+      end or miss
+    end
+  end
+end
+
+using FlexHash
+
+class Hash
   def method_missing(name, *args)
     name =~ /=$/ ? send(:[]=, $`.to_sym, *args) : send(:[], name, *args)
   end
@@ -77,16 +110,18 @@ end
 
 # ==[ Templates ]==
 
-def code_for_task(task, path)
+def compile(task, path)
   <<~"|".strip
     #{ task.begin }
 
-    # calculate loops needed, if not supplied
+    # number of loops requested
     __flay_iters = #{ task.loops.to_i }
+
+    # calculate loops if not supplied
     if __flay_iters == 0
       __flay_until = __flay_timer + #{ $config.warmup(3) }
       while __flay_timer < __flay_until
-        #{ "\n" + task.script&.strip }
+        #{ task.script&.strip }
         __flay_iters += 1
       end
     end
@@ -104,12 +139,12 @@ def code_for_task(task, path)
     __flay_loops = 0
     __flay_begin = __flay_timer
     while __flay_loops < __flay_iters
-      #{ "\n" + task.script&.strip }
+      #{ task.script&.strip }
       __flay_loops += 1
     end
     __flay_delay = __flay_timer - __flay_begin
 
-    File.write(#{ path.inspect }, [__flay_loops, __flay_delay].inspect)
+    File.write(#{ path.inspect }, [__flay_loops, __flay_delay - __flay_waste].inspect)
 
     #{ task.end }
   |
@@ -131,7 +166,6 @@ def boxlines(main, cols, runs=1)
 end
 
 def execute(command, path)
-  # puts "", "=" * 78, File.read(path), "=" * 78, ""
   IO.popen(["ruby", path].join(" "), &:read)
   $?.success? or raise
   eval(File.read(path))
@@ -160,8 +194,8 @@ def stats(list, scope=nil)
   end
 end
 
-def write(file, code)
-  file.puts(code)
+def write(file, data)
+  file.puts(data)
   file.close
   yield file.path
 end
@@ -170,7 +204,7 @@ end
 
 # read the flay script
 flay = ARGV.first or abort "missing flay script"
-code = ERB.new(DATA.read)
+tmpl = ERB.new(DATA.read)
 
 # grok the config
 $config = eval(File.read(flay))
@@ -188,15 +222,14 @@ rank = []
 rt, rm, rb = boxlines(wide, cols.map {|e| e.size + 8 }, (swap ? cs : ts).size)
 
 # begin output
-puts "```"
-puts [$0, *ARGV].shelljoin, "" unless hush
+puts "```", [$0, *ARGV].shelljoin, "" unless hush
 
 # loop over environment(s)
 es.each_with_index do |e, ei|
   puts IO.popen(["ruby", "-v"].join(" "), &:read) unless hush
   puts rt
 
-  command = ["/Users/shreeve/.asdf/shims/ruby"]
+  command = ["/usr/bin/env ruby"]
 
   # loop over context(s) and task(s)
   ys, xs = swap ? [ts, cs] : [cs, ts]
@@ -204,22 +237,24 @@ es.each_with_index do |e, ei|
   # row: content, header
   rc = "Task" # or "Context"
   rh = "│ %-*.*s │" % [wide, wide, e.name(es.size > 1 ? "Env ##{ei + 1}" : rc)]
-  rh = xs.inject(rh) {|s, x| s << " %-*.*s │" % [full, full, x.name("").center(full)] }
+  rh = xs.inject(rh) {|s, x| s << " %-*.*s │" % [full, full, x.name("Results").center(full)] }
   puts rh, rm
 
   ys.each_with_index do |y, yi|
-    print "│ %-*.*s │" % [wide, wide, y.name]
+    print "│ %-*.*s │" % [wide, wide, y.name("Results")]
     xs.each_with_index do |x, xi|
     t, ti, c, ci = swap ? [y, yi, x, xi] : [x, xi, y, yi]
       delay = Tempfile.open(['flay-', '.rb']) do |file|
-        t.loops = runs if runs # || warmup(e, c, t)
-        write(file, code.result(binding).rstrip + "\n") do |path|
+        t.loops = runs if runs
+        code = tmpl.result(binding).rstrip + "\n"
+        write(file, code) do |path|
           runs, time = execute(command, path)
           t.loops ||= runs
           vals = stats(show, binding)
           rank << [runs/time, ei, ci, ti]
           print vals.zip(cols).map {|pair| " %s │" % scale(*pair) }.join
         end
+        puts "", code, "=" * 78 if hack
       end
     end
     print "\n"
@@ -245,14 +280,15 @@ rank.each do |ips, ei, ci, ti|
   name = (flip ? cs[ci] : ts[ti]).name
   print "│ %-*.*s │ %s │ " % [wide, wide, name, scale(ips, "i/s")]
   if ips.round(2) == fast.round(2)
-    print "fastest".center(room)
+    text = "fastest".center(room)
+    print ansi ? text.ansi!(:green, :bold) : text
   else
     print  "%*.*s" % [room, room, pict % [fast/ips]]
   end
   print " │ %-6s │\n" % ([ei+1,ci+1,ti+1] * "/")
 end
 puts rb
-puts "```"
+puts "```" unless hush
 
 __END__
 
@@ -262,14 +298,15 @@ __END__
 #        Task <%= ti + 1 %>: <%= t.name %>
 # ============================================================================
 
-trap("INT") { exit } # { abort caller.unshift("", "") * "\n" }
+trap("INT") { exit }
 
-def __flay_timer; Process.clock_gettime(Process::CLOCK_MONOTONIC); end
+# def __flay_timer; Process.clock_gettime(Process::CLOCK_MONOTONIC); end
+def __flay_timer; Time.now.to_f; end
 
 <%= e.begin %>
 <%= c.begin %>
 
-<%= code_for_task(t, file.path) %>
+<%= compile(t, file.path) %>
 
 <%= c.end %>
 <%= e.end %>
