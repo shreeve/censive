@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 # ============================================================================
-# flay - A quick and lightweight benchmarking tool for Ruby
+# winr - A quick and lightweight benchmarking tool for Ruby
 #
 # Author: Steve Shreeve (steve.shreeve@gmail.com)
 #   Date: Feb 14, 2023
@@ -12,7 +12,7 @@
 # 3. Accurately measure times, see http://bit.ly/3ltE7MP
 #
 # TODO:
-# 1. Implement some magic so the config file is very easy to populate
+# 1. Enable YAML config files
 # ============================================================================
 
 trap("INT" ) { abort "\n" }
@@ -115,36 +115,36 @@ def compile(task, path)
     #{ task.begin }
 
     # number of loops requested
-    __flay_iters = #{ task.loops.to_i }
+    __winr_iters = #{ task.loops.to_i }
 
     # calculate loops if not supplied
-    if __flay_iters == 0
-      __flay_until = __flay_timer + #{ $config.warmup(3) }
-      while __flay_timer < __flay_until
+    if __winr_iters == 0
+      __winr_until = __winr_timer + #{ $config.warmup(3) }
+      while __winr_timer < __winr_until
         #{ task.script&.strip }
-        __flay_iters += 1
+        __winr_iters += 1
       end
     end
 
     # calculate time wasted on loop overhead
-    __flay_waste = 0
-    __flay_loops = 0
-    __flay_begin = __flay_timer
-    while __flay_loops < __flay_iters
-      __flay_loops += 1
+    __winr_waste = 0
+    __winr_loops = 0
+    __winr_begin = __winr_timer
+    while __winr_loops < __winr_iters
+      __winr_loops += 1
     end
-    __flay_waste = __flay_timer - __flay_begin
+    __winr_waste = __winr_timer - __winr_begin
 
     # calculate time spent running our task
-    __flay_loops = 0
-    __flay_begin = __flay_timer
-    while __flay_loops < __flay_iters
+    __winr_loops = 0
+    __winr_begin = __winr_timer
+    while __winr_loops < __winr_iters
       #{ task.script&.strip }
-      __flay_loops += 1
+      __winr_loops += 1
     end
-    __flay_delay = __flay_timer - __flay_begin
+    __winr_delay = __winr_timer - __winr_begin
 
-    File.write(#{ path.inspect }, [__flay_loops, __flay_delay - __flay_waste].inspect)
+    File.write(#{ path.inspect }, [__winr_loops, __winr_delay - __winr_waste].inspect)
 
     #{ task.end }
   |
@@ -202,12 +202,12 @@ end
 
 # ==[ Workflow ]==
 
-# read the flay script
-flay = ARGV.first or abort "missing flay script"
+# read the winr script
+winr = ARGV.first or abort "missing winr script"
 tmpl = ERB.new(DATA.read)
 
 # grok the config
-$config = eval(File.read(flay))
+$config = eval(File.read(winr))
 es = $config.environments || [{}]
 cs = $config.contexts     || [{}]
 ts = $config.tasks        || [{}]
@@ -244,7 +244,7 @@ es.each_with_index do |e, ei|
     print "│ %-*.*s │" % [wide, wide, y.name("Results")]
     xs.each_with_index do |x, xi|
     t, ti, c, ci = swap ? [y, yi, x, xi] : [x, xi, y, yi]
-      delay = Tempfile.open(['flay-', '.rb']) do |file|
+      delay = Tempfile.open(['winr-', '.rb']) do |file|
         t.loops = runs if runs
         code = tmpl.result(binding).rstrip + "\n"
         write(file, code) do |path|
@@ -302,8 +302,8 @@ __END__
 
 trap("INT") { exit }
 
-# def __flay_timer; Process.clock_gettime(Process::CLOCK_MONOTONIC); end
-def __flay_timer; Time.now.to_f; end
+# def __winr_timer; Process.clock_gettime(Process::CLOCK_MONOTONIC); end
+def __winr_timer; Time.now.to_f; end
 
 <%= e.begin %>
 <%= c.begin %>
