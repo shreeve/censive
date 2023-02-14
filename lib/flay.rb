@@ -148,6 +148,8 @@ end
 # ==[ Workflow ]==
 
 flay = ARGV.first || "flay-2.rb"
+show = [ :loops, :time, :ips, :spi ]
+
 code = ERB.new(DATA.read)
 
 $config = eval(File.read(flay))
@@ -163,23 +165,30 @@ full = cols.map(&:size).sum + cols.size * 11 - 3
 wide = [*es.map {|e| e.name("").size}, *ts.map {|t| t.name("").size}].max
 @rt, @rm, @rb = boxlines(wide, cols.map {|e| e.size + 8 }, cs.size)
 
-es.each_with_index do |e, ei|
-  command = ["/Users/shreeve/.asdf/shims/ruby"] # "-C", "somedirectory", "foo bar..."
+# begin output
+puts "```"
 puts [$0, *ARGV].shelljoin
+puts IO.popen(["ruby", "-v"].join(" "), &:read)
 
-  puts "", "==[ Environment #{ei + 1}: #{e.name} ]".ljust(75, "="), "" unless e.empty?
+# let 'er rip!
+es.each_with_index do |e, ei|
   puts @rt
-  puts @cb, @rm
 
+  command = ["/Users/shreeve/.asdf/shims/ruby"]
+  @cb = "│ %-*.*s │" % [wide, wide, e.name(es.size > 1 ? "Env ##{ei + 1}" : "Task")]
+  @cb = cs.inject(@cb) {|s, c| s << " %-*.*s │" % [full, full, c.name("").center(full)] }
+  puts @cb
+
+  puts @rm
   ts.each_with_index do |t, ti|
-    print "│ %-*.*s│" % [len, len, t.name]
+    print "│ %-*.*s │" % [wide, wide, t.name]
     cs.each_with_index do |c, ci|
       delay = Tempfile.open(['flay-', '.rb']) do |file|
-        t.loops ||= 1e2 # || warmup(e, c, t)
+        loops = t.loops ||= 1e1 # || warmup(e, c, t)
         write(file, code.result(binding).rstrip + "\n") do |path|
           runs, time = execute(command, path)
-          rate = runs / time
-          print " %s @ %s │" % [scale(time, "s"), scale(rate, "Hz")]
+          vals = stats(show, binding)
+          print vals.zip(cols).map {|pair| " %s │" % scale(*pair) }.join
         end
       end
     end
