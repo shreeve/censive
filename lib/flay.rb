@@ -156,14 +156,12 @@ es = $config.environments || [{}]
 cs = $config.contexts     || [{}]
 ts = $config.tasks        || [{}]
 
-# box sections
-len = 22
-sep = "─" * len
-@rt = "┌" + cs.inject("─#{sep}") {|s, c| s += "┬─#{sep}─" } + "┐"
-@rm = "├" + cs.inject("─#{sep}") {|s, c| s += "┼─#{sep}─" } + "┤"
-@rb = "└" + cs.inject("─#{sep}") {|s, c| s += "┴─#{sep}─" } + "┘"
-@cb = "│ %-*.*s│" % [len, len, "Task"]
-@cb = cs.inject(@cb) {|s, c| s << " %-*.*s │" % [len, len, c.name("").center(len)] }
+# drawing
+show = [:time, :ips, :spi]
+cols = stats(show)
+full = cols.map(&:size).sum + cols.size * 11 - 3
+wide = [*es.map {|e| e.name("").size}, *ts.map {|t| t.name("").size}].max
+@rt, @rm, @rb = boxlines(wide, cols.map {|e| e.size + 8 }, cs.size)
 
 es.each_with_index do |e, ei|
   command = ["/Users/shreeve/.asdf/shims/ruby"] # "-C", "somedirectory", "foo bar..."
