@@ -26,7 +26,7 @@ OptionParser.new.instance_eval do
 
   on "-i <count>"       , "--iterations", "Force the number of iterations for each task", Integer
   on "-h"               , "--help"      , "Show help and command usage" do Kernel.abort to_s; end
-  on "-r"               , "--reverse"   , TrueClass
+  on "-r"               , "--reverse"   , "Show contexts vertically and tasks horizontally", TrueClass
   on "-s <time,ips,spi>", "--stats "    , "Comma-separated list of stats (loops, time, ips, spi)"
   separator <<~"end"
 
