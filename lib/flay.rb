@@ -51,6 +51,9 @@ show = show.downcase.scan(/[a-z]+/i).uniq & %w[ ips loops spi time ]
 show.empty? and abort "invalid list of statistics #{opts[:stats].inspect}"
 swap = !opts[:reverse]
 
+Infinity = 1.0 / 0
+Overflow = "\n\nERROR: numeric overflow"
+
 class Hash
   alias_method :default_lookup, :[]
 
@@ -164,9 +167,10 @@ end
 def scale(show, unit)
   slot = 3
   span = ["G", "M", "K", " ", "m", "µ", "p"]
-  show *= 1000.0 and slot += 1 while show < 1.0
-  show /= 1000.0 and slot -= 1 while show > 1000.0
-  slot.between?(0, 6) or raise "numeric overflow"
+  [0, Infinity].include?(show) and abort Overflow
+  show *= 1000.0 and slot += 1 while show > 0 && show < 1.0
+  show /= 1000.0 and slot -= 1 while show >= 1000.0
+  slot.between?(0, 6) or abort Overflow
   "%6.2f %s%s" % [show, span[slot], unit]
 end
 
