@@ -15,6 +15,8 @@
 # 1. Implement some magic so the config file is very easy to populate
 # ============================================================================
 
+trap("INT" ) { abort "\n" }
+
 require "erb"
 require "optparse"
 require "shellwords"
@@ -273,6 +275,8 @@ __END__
 #     Context <%= ci + 1 %>: <%= c.name %>
 #        Task <%= ti + 1 %>: <%= t.name %>
 # ============================================================================
+
+trap("INT") { exit } # { abort caller.unshift("", "") * "\n" }
 
 def __flay_timer; Process.clock_gettime(Process::CLOCK_MONOTONIC); end
 
