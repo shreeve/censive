@@ -49,7 +49,7 @@ def code_for_warmup(task, path)
 
     #{ task.begin }
 
-    # calculate iterations during warmup time
+    # calculate loops during warmup time
     __flay_begin = __flay_timer
     __flay_until = __flay_begin + #{ $config.warmup(3) }
     __flay_loops = 0
