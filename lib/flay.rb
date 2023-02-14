@@ -17,6 +17,7 @@
 # ============================================================================
 
 require "erb"
+require "shellwords"
 require "tempfile"
 
 class Hash
@@ -140,6 +141,7 @@ sep = "─" * len
 
 es.each_with_index do |e, ei|
   command = ["/Users/shreeve/.asdf/shims/ruby"] # "-C", "somedirectory", "foo bar..."
+puts [$0, *ARGV].shelljoin
 
   puts "", "==[ Environment #{ei + 1}: #{e.name} ]".ljust(75, "="), "" unless e.empty?
   puts @rt
