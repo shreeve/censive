@@ -238,7 +238,7 @@ es.each_with_index do |e, ei|
     end
     print "\n"
   end
-  puts rb
+  puts rb, ""
 end
 
 # show the comparison
