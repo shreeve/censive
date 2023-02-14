@@ -77,47 +77,33 @@ end
 
 # ==[ Templates ]==
 
-def code_for_warmup(task, path)
-  <<~"|".strip
-    # warmup for #{task.name}"
-
-    #{ task.begin }
-
-    # calculate loops during warmup time
-    __flay_begin = __flay_timer
-    __flay_until = __flay_begin + #{ $config.warmup(3) }
-    __flay_loops = 0
-    while __flay_timer < __flay_until
-      #{ "\n" + task.script&.strip }
-      __flay_loops += 1
-    end
-    __flay_delay = __flay_timer - __flay_begin
-
-    File.write(#{ path.inspect }, [__flay_loops, __flay_delay].inspect)
-
-    #{ task.end }
-  |
-end
-
 def code_for_task(task, path)
   <<~"|".strip
     #{ task.begin }
 
+    # calculate loops needed, if not supplied
+    __flay_iters = #{ task.loops.to_i }
+    if __flay_iters == 0
+      __flay_until = __flay_timer + #{ $config.warmup(3) }
+      while __flay_timer < __flay_until
+        #{ "\n" + task.script&.strip }
+        __flay_iters += 1
+      end
+    end
+
     # calculate time wasted on loop overhead
     __flay_waste = 0
-    if #{ task.loops.to_i } > 0
-      __flay_loops = 0
-      __flay_begin = __flay_timer
-      while __flay_loops < #{ task.loops.to_i }
-        __flay_loops += 1
-      end
-      __flay_waste = __flay_timer - __flay_begin
+    __flay_loops = 0
+    __flay_begin = __flay_timer
+    while __flay_loops < __flay_iters
+      __flay_loops += 1
     end
+    __flay_waste = __flay_timer - __flay_begin
 
     # calculate time spent running our task
     __flay_loops = 0
     __flay_begin = __flay_timer
-    while __flay_loops < #{ task.loops.to_i }
+    while __flay_loops < __flay_iters
       #{ "\n" + task.script&.strip }
       __flay_loops += 1
     end
@@ -227,9 +213,9 @@ es.each_with_index do |e, ei|
     t, ti, c, ci = swap ? [y, yi, x, xi] : [x, xi, y, yi]
       delay = Tempfile.open(['flay-', '.rb']) do |file|
         t.loops = runs if runs # || warmup(e, c, t)
-        t.loops ||= 1
         write(file, code.result(binding).rstrip + "\n") do |path|
           runs, time = execute(command, path)
+          t.loops ||= runs
           vals = stats(show, binding)
           rank << [runs/time, ei, ci, ti]
           print vals.zip(cols).map {|pair| " %s │" % scale(*pair) }.join
