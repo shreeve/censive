@@ -110,6 +110,19 @@ def boxlines(main, cols, runs=1)
   end
 end
 
+def stats(list, scope=nil)
+  list.map do |item|
+    pair = case item
+    when :loops then ["runs"     , "times"]
+    when :time  then ["time"     , "s"    ]
+    when :ips   then ["runs/time", "i/s"  ]
+    when :spi   then ["time/runs", "s/i"  ]
+    else abort "unknown statistic #{item.inspect}"
+    end
+    scope ? eval(pair[0], scope) : pair[1]
+  end
+end
+
 def execute(command, path)
   # puts "", "=" * 78, File.read(path), "=" * 78, ""
   IO.popen(["ruby", path].join(" "), &:read)
