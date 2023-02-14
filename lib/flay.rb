@@ -104,7 +104,7 @@ def boxlines(main, cols, runs=1)
   .map do |str|
     list = [main, *(cols * runs)]
     list.map.with_index do |col, i|
-      chr = str[i < 3 ? i : (i - 1) % cols.size == 0 ? 1 : 2]
+      chr = str[i < 2 ? i : (i - 1) % cols.size == 0 ? 1 : 2]
       chr + str[3] * (col + 2)
     end.join + str[-1]
   end
