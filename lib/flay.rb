@@ -246,21 +246,22 @@ rank.sort! {|a, b| b[0] <=> a[0] }
 fast = rank.first[0]
 slow = rank.last[0]
 pict = "%.2fx slower"
-last = (pict % slow).size
-cols = [11, last, 6]
+room = (pict % [fast / slow]).size
+cols = [11, room, 6]
 full = cols.sum + (cols.size - 1) * 3
 rt, rm, rb = boxlines(wide, cols)
 rh = "│ %-*.*s │" % [wide, wide, "Rank"]
 rh << " %-*.*s │" % [full, full, "Performance".center(full)]
 
-puts "", rt, rh, rm
+puts rt, rh, rm
+flip = cs.size > 1 && ts.size == 1
 rank.each do |ips, ei, ci, ti|
-  y = swap ? cs[ci] : ts[ti]
-  print "│ %-*.*s │ %s │ " % [wide, wide, y.name, scale(ips, "i/s")]
-  if ips == fast
-    print "fastest".center(last)
+  name = (flip ? cs[ci] : ts[ti]).name
+  print "│ %-*.*s │ %s │ " % [wide, wide, name, scale(ips, "i/s")]
+  if ips.round(2) == fast.round(2)
+    print "fastest".center(room)
   else
-    print  "%*.*s" % [last, last, pict % [fast/ips]]
+    print  "%*.*s" % [room, room, pict % [fast/ips]]
   end
   print " │ %-6s │\n" % ([ei+1,ci+1,ti+1] * "/")
 end
