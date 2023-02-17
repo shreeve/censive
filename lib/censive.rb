@@ -4,7 +4,7 @@
 # censive - A quick and lightweight CSV handling library for Ruby
 #
 # Author: Steve Shreeve (steve.shreeve@gmail.com)
-#   Date: Feb 14, 2023
+#   Date: Feb 17, 2023
 #
 # https://crystal-lang.org/api/1.7.2/CSV.html (Crystal's CSV library)
 # https://github.com/ruby/strscan/blob/master/ext/strscan/strscan.c
@@ -46,11 +46,11 @@ class Censive < StringScanner
     drop:     false   , # drop trailing empty columns?
     encoding: nil     , # character encoding
     excel:    false   , # literals ="01" formulas =A1 + B2 http://bit.ly/3Y7jIvc
-    mode:     :compact, # export mode: compact or full
+    mode:     :compact, # output mode: compact or full
     out:      nil     , # output stream, needs to respond to <<
     quote:    '"'     , # quote character
     relax:    false   , # relax quote parsing so ,"Fo"o, => ,"Fo""o",
-    rowsep:   "\n"    , # row separator for export
+    rowsep:   "\n"    , # row separator for output
     sep:      ","     , # column separator character
     strip:    false   , # strip columns when reading
     **opts              # grab bag
@@ -71,7 +71,7 @@ class Censive < StringScanner
     @encoding = str.encoding
     @excel    = excel
     @mode     = mode
-    @out      = out || $stdout
+    @out      = out || ""
     @relax    = relax
     @strip    = strip
 
@@ -121,7 +121,7 @@ class Censive < StringScanner
       @cols = count if count > @cols
       @cells += count
     end
-    @rows
+    self
   end
 
   def next_row
@@ -179,10 +179,10 @@ class Censive < StringScanner
     @rows.each {|row| yield row }
   end
 
-  def export(**opts)
+  def to_csv(**opts)
     dest = opts.empty? ? self : self.class.writer(**opts)
     each {|row| dest << row }
-    dest
+    dest.out
   end
 
   # ==[ Helpers ]==
