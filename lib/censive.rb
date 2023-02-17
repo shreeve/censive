@@ -153,6 +153,7 @@ class Censive < StringScanner
         scan(@eoc) and break
         @relax or bomb "invalid character after quote"
         token << @quote + (scan_until(@quotes) or bomb "bad inline quote")
+        scan(@eoc) and break
       end
       scan(@sep)
       @strip ? token.strip : token
