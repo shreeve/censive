@@ -190,7 +190,7 @@ class Censive < StringScanner
   # returns 2 (must be quoted and escaped), 1 (must be quoted), 0 (neither)
   def grok(str)
     if idx = str.index(@escapes)
-      $1 ? 2 : str.index(@quotes, idx) ? 2 : 1
+      $1 ? 2 : str.index(@quote, idx) ? 2 : 1
     else
       0
     end
