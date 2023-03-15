@@ -1,7 +1,5 @@
 #!/usr/bin/env ruby
 
-VERSION="0.25"
-
 # ============================================================================
 # censive - A quick and lightweight CSV handling library for Ruby
 #
@@ -30,6 +28,8 @@ VERSION="0.25"
 require "strscan"
 
 class Censive < StringScanner
+  VERSION="0.26"
+
   attr :encoding, :out, :rows
 
   def self.parse(...)
