@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = "censive"
-  s.version     = "0.24"
+  s.version     = `grep '^VERSION' lib/censive.rb | cut -f 2 -d '"'`
   s.author      = "Steve Shreeve"
   s.email       = "steve.shreeve@gmail.com"
   s.summary     =

@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
 
+VERSION="0.25"
+
 # ============================================================================
 # censive - A quick and lightweight CSV handling library for Ruby
 #
@@ -36,7 +38,7 @@ class Censive < StringScanner
 
   def self.writer(obj=nil, **opts, &code)
     case obj
-    when String then File.open(obj, "w") {|io| yield new(out: io, **opts, &code) }
+    when String then File.open(obj, "w") {|io| new(out: io, **opts, &code) }
     when IO,nil then new(out: obj, **opts, &code)
     else abort "#{File.basename($0)}: invalid #{obj.class} object in writer"
     end
@@ -71,7 +73,7 @@ class Censive < StringScanner
     @encoding = str.encoding
     @excel    = excel
     @mode     = mode
-    @out      = out || ""
+    @out      = out || $stdout
     @relax    = relax
     @strip    = strip
 
@@ -100,6 +102,8 @@ class Censive < StringScanner
     @quoted   = @excel ? /(?:=)?#{@quote}/o : @quote
     @unquoted = /[^#{@sep}#{@cr}#{@lf}][^#{@quote}#{@cr}#{@lf}]*/o
     @leadzero = /\A0\d*\z/
+
+    yield self if block_given?
   end
 
   def reset(str=nil)
