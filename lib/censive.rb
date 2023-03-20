@@ -91,14 +91,15 @@ class Censive < StringScanner
     @seq      = [@sep, @eq].join # used for parsing in excel mode
 
     # regexes
-    @eoc      = /(?=#{"\\" + @sep}|#{@cr}|#{@lf}|\z)/o # end of cell
+    xsep      = Regexp.escape(@sep) # may need to be escaped
+    @eoc      = /(?=#{"\\" + xsep}|#{@cr}|#{@lf}|\z)/o # end of cell
     @eol      = /#{@cr}#{@lf}?|#{@lf}/o                # end of line
-    @escapes  = /(#{@quote})|#{"\\"+@sep}|#{@cr}|#{@lf}/o
-    @quotable = /#{"\\"+@sep}|#{@cr}|#{@lf}/o
+    @escapes  = /(#{@quote})|#{"\\"+xsep}|#{@cr}|#{@lf}/o
+    @quotable = /#{"\\"+xsep}|#{@cr}|#{@lf}/o
     @quotes   = /#{@quote}/o
-    @seps     = /#{@sep}+/o
+    @seps     = /#{xsep}+/o
     @quoted   = @excel ? /(?:=)?#{@quote}/o : @quote
-    @unquoted = /[^#{@sep}#{@cr}#{@lf}][^#{@quote}#{@cr}#{@lf}]*/o
+    @unquoted = /[^#{xsep}#{@cr}#{@lf}][^#{@quote}#{@cr}#{@lf}]*/o
     @leadzero = /\A0\d*\z/
   end
 
