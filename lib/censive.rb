@@ -28,7 +28,7 @@
 require "strscan"
 
 class Censive < StringScanner
-  VERSION="0.27"
+  VERSION="0.28"
 
   attr :encoding, :out, :rows
 
@@ -96,8 +96,8 @@ class Censive < StringScanner
     xsep      = Regexp.escape(@sep) # may need to be escaped
     @eoc      = /(?=#{"\\" + xsep}|#{@cr}|#{@lf}|\z)/o # end of cell
     @eol      = /#{@cr}#{@lf}?|#{@lf}/o                # end of line
-    @escapes  = /(#{@quote})|#{"\\"+xsep}|#{@cr}|#{@lf}/o
-    @quotable = /#{"\\"+xsep}|#{@cr}|#{@lf}/o
+    @escapes  = /(#{@quote})|#{xsep}|#{@cr}|#{@lf}/o
+    @quotable = /#{xsep}|#{@cr}|#{@lf}/o
     @quotes   = /#{@quote}/o
     @seps     = /#{xsep}+/o
     @quoted   = @excel ? /(?:=)?#{@quote}/o : @quote
