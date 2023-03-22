@@ -4,7 +4,7 @@
 # censive - A quick and lightweight CSV handling library for Ruby
 #
 # Author: Steve Shreeve (steve.shreeve@gmail.com)
-#   Date: Mar 20, 2023
+#   Date: Mar 22, 2023
 #
 # https://crystal-lang.org/api/1.7.2/CSV.html (Crystal's CSV library)
 # https://github.com/ruby/strscan/blob/master/ext/strscan/strscan.c
@@ -28,7 +28,7 @@
 require "strscan"
 
 class Censive < StringScanner
-  VERSION="0.28"
+  VERSION="0.29"
 
   attr :encoding, :out, :rows
 
@@ -185,10 +185,14 @@ class Censive < StringScanner
     @rows.each {|row| yield row }
   end
 
-  def to_csv(**opts)
-    dest = opts.empty? ? self : self.class.writer(**opts)
-    each {|row| dest << row }
-    dest.out
+  def to_csv(*args, **opts, &code)
+    if args.empty? && opts.empty?
+      block_given? ? each(&code) : each {|row| @out << row }
+    elsif block_given?
+      Censive.writer(*args, **opts, &code)
+    else
+      Censive.writer(*args, **opts) {|csv| each {|row| csv << row }}
+    end
   end
 
   # ==[ Helpers ]==
