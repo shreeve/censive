@@ -28,7 +28,7 @@
 require "strscan"
 
 class Censive < StringScanner
-  VERSION="0.29"
+  VERSION="1.0.0"
 
   attr :encoding, :out, :rows
 
@@ -220,7 +220,7 @@ class Censive < StringScanner
         row
       when 1
         row.map do |col|
-          col.match?(@quotable) ? "#{q}#{col}#{q}" : col
+          col&.match?(@quotable) ? "#{q}#{col}#{q}" : col
         end
       else
         row.map do |col|
