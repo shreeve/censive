@@ -28,7 +28,7 @@
 require "strscan"
 
 class Censive < StringScanner
-  VERSION="1.0.0"
+  VERSION="1.0.1"
 
   attr :encoding, :out, :rows
 
@@ -199,7 +199,7 @@ class Censive < StringScanner
 
   # returns 2 (must be quoted and escaped), 1 (must be quoted), 0 (neither)
   def grok(str)
-    if idx = str.index(@escapes)
+    if idx = str&.index(@escapes)
       $1 ? 2 : str.index(@quote, idx) ? 2 : 1
     else
       0
