@@ -181,7 +181,7 @@ class Censive < StringScanner
   end
 
   def each
-    @rows ||= parse
+    @rows or parse
     @rows.each {|row| yield row }
   end
 
