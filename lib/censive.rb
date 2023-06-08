@@ -38,8 +38,8 @@ class Censive < StringScanner
 
   def self.writer(obj=nil, **opts, &code)
     case obj
-    when String then File.open(obj, "w") {|io| new(out: io, **opts, &code) }
-    when IO,nil then new(out: obj, **opts, &code)
+    when String          then File.open(obj, "w") {|io| new(out: io, **opts, &code) }
+    when StringIO,IO,nil then new(out: obj, **opts, &code)
     else abort "#{File.basename($0)}: invalid #{obj.class} object in writer"
     end
   end
