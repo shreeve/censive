@@ -25,10 +25,11 @@
 # 5. Implement support for scan_until(string) <= right now only regex is valid
 # ============================================================================
 
+require "stringio"
 require "strscan"
 
 class Censive < StringScanner
-  VERSION="1.0.2"
+  VERSION="1.0.3"
 
   attr :encoding, :out, :rows
 
