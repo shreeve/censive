@@ -4,7 +4,7 @@
 # censive - A quick and lightweight CSV handling library for Ruby
 #
 # Author: Steve Shreeve (steve.shreeve@gmail.com)
-#   Date: Mar 22, 2023
+#   Date: June 16, 2023
 #
 # https://crystal-lang.org/api/1.7.2/CSV.html (Crystal's CSV library)
 # https://github.com/ruby/strscan/blob/master/ext/strscan/strscan.c
@@ -29,7 +29,7 @@ require "stringio"
 require "strscan"
 
 class Censive < StringScanner
-  VERSION="1.0.3"
+  VERSION="1.0.4"
 
   attr :encoding, :out, :rows
 
@@ -95,14 +95,14 @@ class Censive < StringScanner
 
     # regexes
     xsep      = Regexp.escape(@sep) # may need to be escaped
-    @eoc      = /(?=#{"\\" + xsep}|#{@cr}|#{@lf}|\z)/o # end of cell
-    @eol      = /#{@cr}#{@lf}?|#{@lf}/o                # end of line
-    @escapes  = /(#{@quote})|#{xsep}|#{@cr}|#{@lf}/o
-    @quotable = /#{xsep}|#{@cr}|#{@lf}/o
-    @quotes   = /#{@quote}/o
-    @seps     = /#{xsep}+/o
-    @quoted   = @excel ? /(?:=)?#{@quote}/o : @quote
-    @unquoted = /[^#{xsep}#{@cr}#{@lf}][^#{@quote}#{@cr}#{@lf}]*/o
+    @eoc      = /(?=#{"\\" + xsep}|#{@cr}|#{@lf}|\z)/ # end of cell
+    @eol      = /#{@cr}#{@lf}?|#{@lf}/                # end of line
+    @escapes  = /(#{@quote})|#{xsep}|#{@cr}|#{@lf}/
+    @quotable = /#{xsep}|#{@cr}|#{@lf}/
+    @quotes   = /#{@quote}/
+    @seps     = /#{xsep}+/
+    @quoted   = @excel ? /(?:=)?#{@quote}/ : @quote
+    @unquoted = /[^#{xsep}#{@cr}#{@lf}][^#{@quote}#{@cr}#{@lf}]*/
     @leadzero = /\A0\d*\z/
 
     yield self if block_given?
