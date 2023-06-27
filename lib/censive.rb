@@ -29,7 +29,7 @@ require "stringio"
 require "strscan"
 
 class Censive < StringScanner
-  VERSION="1.0.4"
+  VERSION="1.0.5"
 
   attr :encoding, :out, :rows
 
@@ -39,9 +39,16 @@ class Censive < StringScanner
 
   def self.writer(obj=nil, **opts, &code)
     case obj
-    when String          then File.open(obj, "w") {|io| new(out: io, **opts, &code) }
-    when StringIO,IO,nil then new(out: obj, **opts, &code)
-    else abort "#{File.basename($0)}: invalid #{obj.class} object in writer"
+    when String
+      if block_given?
+        File.open(obj, "w") {|io| new(out: io, **opts, &code) }
+      else
+        new(out: File.open(obj, "w"), **opts)
+      end
+    when StringIO, IO, nil
+      new(out: obj, **opts, &code)
+    else
+      abort "#{File.basename($0)}: invalid #{obj.class} object in writer"
     end
   end
 
