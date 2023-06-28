@@ -4,14 +4,14 @@
 # censive - A quick and lightweight CSV handling library for Ruby
 #
 # Author: Steve Shreeve (steve.shreeve@gmail.com)
-#   Date: June 16, 2023
+#   Date: June 28, 2023
 #
 # https://crystal-lang.org/api/1.7.2/CSV.html (Crystal's CSV library)
 # https://github.com/ruby/strscan/blob/master/ext/strscan/strscan.c
 #
-# Thanks to Sutou Kouhei (kou) for his excellent advice on using scan
+# Thanks to Sutou Kouhei (kou) for his excellent advice on using scan better
 # ============================================================================
-# GOALS:
+# HIGHLIGHTS:
 # 1. Faster than Ruby's default CSV library
 # 2. Lightweight code with streamlined and optimized logic
 # 3. Support most non-compliant CSV variations (@excel, @relax, etc)
@@ -29,15 +29,15 @@ require "stringio"
 require "strscan"
 
 class Censive < StringScanner
-  VERSION="1.0.5"
+  VERSION="1.1.0"
 
   attr :encoding, :out, :rows
 
-  def self.parse(...)
-    new(...).parse
+  def self.read(...)
+    new(...).read
   end
 
-  def self.writer(obj=nil, **opts, &code)
+  def self.write(obj=nil, **opts, &code)
     case obj
     when String
       if block_given?
@@ -48,7 +48,7 @@ class Censive < StringScanner
     when StringIO, IO, nil
       new(out: obj, **opts, &code)
     else
-      abort "#{File.basename($0)}: invalid #{obj.class} object in writer"
+      abort "#{File.basename($0)}: #{self}.write can't use #{obj.class} objects"
     end
   end
 
@@ -124,9 +124,9 @@ class Censive < StringScanner
     super()
   end
 
-  # ==[ Parser ]==
+  # ==[ Reader ]==
 
-  def parse
+  def read
     @rows = []
     while row = next_row
       @rows << row
@@ -189,28 +189,19 @@ class Censive < StringScanner
   end
 
   def each
-    @rows or parse
+    @rows or read
     @rows.each {|row| yield row }
   end
 
-  def to_csv(*args, **opts, &code)
+  # ==[ Writer ]==
+
+  def write(*args, **opts, &code)
     if args.empty? && opts.empty?
       block_given? ? each(&code) : each {|row| @out << row }
     elsif block_given?
-      Censive.writer(*args, **opts, &code)
+      Censive.write(*args, **opts, &code)
     else
-      Censive.writer(*args, **opts) {|csv| each {|row| csv << row }}
-    end
-  end
-
-  # ==[ Helpers ]==
-
-  # returns 2 (must be quoted and escaped), 1 (must be quoted), 0 (neither)
-  def grok(str)
-    if idx = str&.index(@escapes)
-      $1 ? 2 : str.index(@quote, idx) ? 2 : 1
-    else
-      0
+      Censive.write(*args, **opts) {|csv| each {|row| csv << row }}
     end
   end
 
@@ -223,7 +214,7 @@ class Censive < StringScanner
     s,q = @sep, @quote
     out = case @mode
     when :compact
-      case @excel ? 2 : grok(row.join)
+      case @excel ? 2 : quote_type(row.join)
       when 0
         row
       when 1
@@ -233,7 +224,7 @@ class Censive < StringScanner
       else
         row.map do |col|
           @excel && col =~ @leadzero ? "=#{q}#{col}#{q}" :
-          case grok(col)
+          case quote_type(col)
           when 0 then col
           when 1 then "#{q}#{col}#{q}"
           else        "#{q}#{col.gsub(q, @esc)}#{q}"
@@ -253,6 +244,21 @@ class Censive < StringScanner
     @out << out + @rowsep
   end
 
+  # ==[ Helpers ]==
+
+  def bomb(msg)
+    abort "\n#{File.basename($0)}: #{msg} at character #{pos} near '#{string[pos-4,7]}'"
+  end
+
+  # returns 2 (must be quoted and escaped), 1 (must be quoted), 0 (neither)
+  def quote_type(str)
+    if idx = str&.index(@escapes)
+      $1 ? 2 : str.index(@quote, idx) ? 2 : 1
+    else
+      0
+    end
+  end
+
   def stats
     wide = string.size.to_s.size
     puts "%#{wide}d rows"    % @rows.size
@@ -261,7 +267,4 @@ class Censive < StringScanner
     puts "%#{wide}d bytes"   % string.size
   end
 
-  def bomb(msg)
-    abort "\n#{File.basename($0)}: #{msg} at character #{pos} near '#{string[pos-4,7]}'"
-  end
 end
