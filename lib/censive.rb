@@ -244,12 +244,6 @@ class Censive < StringScanner
     @out << out + @rowsep
   end
 
-  # ==[ Helpers ]==
-
-  def bomb(msg)
-    abort "\n#{File.basename($0)}: #{msg} at character #{pos} near '#{string[pos-4,7]}'"
-  end
-
   # returns 2 (must be quoted and escaped), 1 (must be quoted), 0 (neither)
   def quote_type(str)
     if idx = str&.index(@escapes)
@@ -257,6 +251,12 @@ class Censive < StringScanner
     else
       0
     end
+  end
+
+  # ==[ Helpers ]==
+
+  def bomb(msg)
+    abort "\n#{File.basename($0)}: #{msg} at character #{pos} near '#{string[pos-4,7]}'"
   end
 
   def stats
