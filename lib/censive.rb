@@ -286,3 +286,24 @@ if __FILE__ == $0
 
   puts Censive.read(str, excel: true, relax: true).write
 end
+
+__END__
+"AAA "BBB",CCC,"DDD"
+
+"CHUI, LOK HANG "BENNY",224325325610,="001453","Hemoglobin A1c",=""
+"Don",="007",10,"Ed"
+Name,Age,,,Shoe,,,
+"Alice",27,5
+Bob,33,10 1/2
+Charlie or "Chuck",=B2 + B3,9
+Subtotal,=sum(B2:B5),="01234"
+A,B,C,D
+A,B,"C",D
+A,B,C",D
+A,B,"C",D
+08/27/2022,="73859443",="04043260",,"Crossover @ Mathilda","CHO, JOELLE "JOJO"",08/19/2022
+123,
+123,"CHO, JOELLE "JOJO"",456
+123,"CHO, JOELLE ""JOJO""",456
+=,=x,x=,="x",="","","=",123,0123,="123",="0123"
+,=x,x=,x,,,,,,=,,123,="0123",123,,="0123"
