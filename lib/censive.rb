@@ -268,3 +268,21 @@ class Censive < StringScanner
   end
 
 end
+
+if __FILE__ == $0
+  str = DATA.gets("\n\n").chomp
+  # str = File.read(ARGV.first || "lc-2023.csv")
+  # str = File.open("KEN_ALL.CSV", "r:cp932").read
+
+  # require "stringio"
+  # csv = Censive.new(str, excel: true, relax: true)
+  # out = "" # StringIO.new
+  # csv.export(out: out) # (excel: true) # sep: "|")
+  # puts out # .string
+
+  # csv = Censive.new(str, excel: true, relax: true, out: "")
+  # out = csv.export
+  # puts out.out
+
+  puts Censive.read(str, excel: true, relax: true).write
+end
