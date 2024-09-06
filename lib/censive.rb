@@ -104,12 +104,12 @@ class Censive < StringScanner
     xsep      = Regexp.escape(@sep) # may need to be escaped
     @eoc      = /(?=#{"\\" + xsep}|#{@cr}|#{@lf}|\z)/ # end of cell
     @eol      = /#{@cr}#{@lf}?|#{@lf}/                # end of line
-    @escapes  = /(#{@quote})|#{xsep}|#{@cr}|#{@lf}/
+    @escapes  = /(#{"\\" + @quote})|#{xsep}|#{@cr}|#{@lf}/
     @quotable = /#{xsep}|#{@cr}|#{@lf}/
-    @quotes   = /#{@quote}/
-    @seps     = /#{xsep}+/
-    @quoted   = @excel ? /(?:=)?#{@quote}/ : @quote
-    @unquoted = /[^#{xsep}#{@cr}#{@lf}][^#{@quote}#{@cr}#{@lf}]*/
+    @quotes   = /#{"\\" + @quote}/
+    @seps     = /#{"\\" + xsep}+/
+    @quoted   = @excel ? /(?:=)?#{"\\" + @quote}/ : @quote
+    @unquoted = /[^#{"\\" + xsep}#{@cr}#{@lf}][^#{"\\" + @quote}#{@cr}#{@lf}]*/
     @leadzero = /\A0\d*\z/
 
     yield self if block_given?
