@@ -29,7 +29,7 @@ require "stringio"
 require "strscan"
 
 class Censive < StringScanner
-  VERSION="1.1.0"
+  VERSION="1.1.1"
 
   attr :encoding, :out, :rows
 
