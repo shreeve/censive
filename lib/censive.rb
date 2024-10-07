@@ -1,16 +1,13 @@
 #!/usr/bin/env ruby
 
-# ============================================================================
+# ==============================================================================
 # censive - A quick and lightweight CSV handling library for Ruby
 #
 # Author: Steve Shreeve (steve.shreeve@gmail.com)
 #   Date: June 28, 2023
 #
-# https://crystal-lang.org/api/1.7.2/CSV.html (Crystal's CSV library)
-# https://github.com/ruby/strscan/blob/master/ext/strscan/strscan.c
-#
-# Thanks to Sutou Kouhei (kou) for his excellent advice on using scan better
-# ============================================================================
+# Thanks to Sutou Kouhei (kou) for his excellent advice on using scan() better
+# ==============================================================================
 # HIGHLIGHTS:
 # 1. Faster than Ruby's default CSV library
 # 2. Lightweight code with streamlined and optimized logic
@@ -23,7 +20,7 @@
 # 3. Speedup possible if our @unquoted regex reads beyond @eol's
 # 4. Will using String#freeze give us a speed up?
 # 5. Implement support for scan_until(string) <= right now only regex is valid
-# ============================================================================
+# ==============================================================================
 
 require "stringio"
 require "strscan"
